@@ -114,26 +114,30 @@ export async function POST(request: Request) {
       accepted_terms_at: new Date().toISOString()
     })
 
-    // Add user to organization if org was created (only for pro/premium)
+    // Add user to organization if org was created
     if (orgData?.id) {
+      // Papéis válidos do enum app_role: admin | lawyer | assistant | client.
+      // Dono de escritório PRO/PREMIUM entra como gestor (admin); no plano free
+      // solo o titular é o próprio advogado (lawyer, pode abrir e aprovar).
       await supabase.from('organization_members').insert({
         organization_id: orgData.id,
         user_id: userId,
-        role: isAdmin ? 'owner' : 'member',
+        role: isAdmin ? 'admin' : 'lawyer',
         status: 'active'
       })
-      
+
+      // Cria subscription para TODOS os planos (inclusive free), garantindo
+      // fonte de verdade do plano por organização.
+      await supabase.from('subscriptions').upsert({
+        organization_id: orgData.id,
+        plan_code: planType,
+        status: 'active',
+        demands_used: 0,
+        demands_limit: planType === 'premium' ? 999 : planType === 'pro' ? 100 : 10,
+      })
+
       // Create subscription record for pro/premium
       if (isAdmin) {
-        await supabase.from('subscriptions').upsert({
-          organization_id: orgData.id,
-          plan_code: planType,
-          status: 'active',
-          demands_used: 0,
-          demands_limit: planType === 'premium' ? 999 : 100,
-          created_at: new Date().toISOString()
-        })
-        
         // Save endereco data if provided
         if (cnpj || logradouro) {
           await supabase.from('endereco').upsert({

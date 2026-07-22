@@ -45,7 +45,7 @@ export default function MembrosPage() {
   const [newMemberEmail, setNewMemberEmail] = useState('')
   const [newMemberName, setNewMemberName] = useState('')
   const [newMemberCpf, setNewMemberCpf] = useState('')
-  const [newMemberRole, setNewMemberRole] = useState('member')
+  const [newMemberRole, setNewMemberRole] = useState('lawyer')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -328,7 +328,8 @@ export default function MembrosPage() {
                     <SelectValue placeholder='Selecione o cargo' />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value='member'>Membro</SelectItem>
+                    <SelectItem value='lawyer'>Advogado</SelectItem>
+                    <SelectItem value='assistant'>Assistente</SelectItem>
                     <SelectItem value='admin'>Administrador</SelectItem>
                   </SelectContent>
                 </Select>
@@ -411,7 +412,7 @@ export default function MembrosPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <Badge style={{ fontSize: '0.75rem', border: 0, backgroundColor: member.role === 'admin' ? 'rgba(212, 175, 55, 0.2)' : 'rgba(59, 130, 246, 0.2)', color: member.role === 'admin' ? '#fbbf24' : '#60a5fa' }}>
                       <Shield className='h-3 w-3 mr-1' />
-                      {member.role === 'admin' ? 'Administrador' : 'Membro'}
+                      {member.role === 'admin' ? 'Administrador' : member.role === 'lawyer' ? 'Advogado' : member.role === 'assistant' ? 'Assistente' : member.role}
                     </Badge>
                     
                     <Badge style={{ fontSize: '0.75rem', border: 0, backgroundColor: member.status === 'active' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: member.status === 'active' ? '#4ade80' : '#f87171' }}>
