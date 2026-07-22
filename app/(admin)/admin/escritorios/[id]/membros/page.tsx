@@ -31,6 +31,7 @@ interface Organization {
   id: string
   name: string
   slug: string
+  responsible_lawyer_id?: string | null
 }
 
 export default function MembrosPage() {
@@ -410,6 +411,11 @@ export default function MembrosPage() {
                   </div>
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    {org?.responsible_lawyer_id && member.user_id === org.responsible_lawyer_id && (
+                      <Badge style={{ fontSize: '0.75rem', border: 0, backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' }}>
+                        Responsável
+                      </Badge>
+                    )}
                     <Badge style={{ fontSize: '0.75rem', border: 0, backgroundColor: member.role === 'admin' ? 'rgba(212, 175, 55, 0.2)' : 'rgba(59, 130, 246, 0.2)', color: member.role === 'admin' ? '#fbbf24' : '#60a5fa' }}>
                       <Shield className='h-3 w-3 mr-1' />
                       {member.role === 'admin' ? 'Administrador' : member.role === 'lawyer' ? 'Advogado' : member.role === 'assistant' ? 'Assistente' : member.role}
