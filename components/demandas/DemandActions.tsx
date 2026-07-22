@@ -15,9 +15,11 @@ interface DemandActionsProps {
   currentStatus?: DemandStatus
   orgId: string
   userId: string
+  /** Só advogados (org role 'lawyer') podem aprovar/finalizar. Assistentes não. */
+  canApprove?: boolean
 }
 
-export function DemandActions({ demandId, currentStatus, orgId, userId }: DemandActionsProps) {
+export function DemandActions({ demandId, currentStatus, orgId, userId, canApprove = false }: DemandActionsProps) {
   const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [adjustmentDialog, setAdjustmentDialog] = useState(false)
@@ -89,21 +91,25 @@ export function DemandActions({ demandId, currentStatus, orgId, userId }: Demand
         </CardHeader>
         <CardContent>
           <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-            Revise o documento entregue e decida se aprova ou solicita ajustes.
+            {canApprove
+              ? 'Revise o documento entregue e decida se aprova ou solicita ajustes.'
+              : 'Revise o documento entregue. Você pode solicitar ajustes; a aprovação final é feita por um advogado.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={handleApprove}
-              disabled={loading !== null}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold gap-2"
-            >
-              {loading === 'approve' ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <CheckCircle className="h-4 w-4" />
-              )}
-              Aprovar Documento
-            </Button>
+            {canApprove && (
+              <Button
+                onClick={handleApprove}
+                disabled={loading !== null}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold gap-2"
+              >
+                {loading === 'approve' ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                Aprovar Documento
+              </Button>
+            )}
             <Button
               onClick={() => setAdjustmentDialog(true)}
               disabled={loading !== null}

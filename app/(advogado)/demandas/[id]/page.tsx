@@ -30,12 +30,15 @@ export default async function DemandaDetailPage({ params }: { params: { id: stri
   // Verify access
   const { data: membership } = await supabase
     .from('organization_members')
-    .select('organization_id')
+    .select('organization_id, role')
     .eq('user_id', user.id)
     .eq('organization_id', demand.organization_id)
     .single()
 
   if (!membership) notFound()
+
+  // Só advogado (org role 'lawyer') pode aprovar; assistente só solicita ajustes.
+  const canApprove = membership.role === 'lawyer'
 
   // Fetch related data
   const [
@@ -230,6 +233,7 @@ export default async function DemandaDetailPage({ params }: { params: { id: stri
                 currentStatus={demand.status as DemandStatus}
                 orgId={demand.organization_id}
                 userId={user.id}
+                canApprove={canApprove}
               />
             )}
 

@@ -1,4 +1,10 @@
-export type UserRole = 'advogado' | 'operador' | 'admin'
+// Papel exibido no perfil (profiles.role)
+export type UserRole = 'advogado' | 'assistente' | 'operador' | 'admin'
+
+// Papel dentro da organização (organization_members.role — enum app_role no banco).
+// 'lawyer' = Advogado (abre e aprova), 'assistant' = Assistente (abre, não aprova),
+// 'admin' = gestor do escritório, 'client' = cliente externo.
+export type OrgRole = 'admin' | 'lawyer' | 'assistant' | 'client'
 
 export type DemandStatus =
   | 'received'
