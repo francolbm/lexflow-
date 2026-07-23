@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
 
     let userId: string
     let tempPassword: string | null = null
+    let invited = false
 
     if (existingProfile) {
       userId = existingProfile.id
@@ -94,19 +95,37 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Este usuário já é membro deste escritório.' }, { status: 400 })
       }
     } else {
-      // 4) Cria a conta com senha temporária (email já confirmado).
-      tempPassword = gerarSenhaTemporaria()
-      const { data: authData, error: createErr } = await serviceClient.auth.admin.createUser({
-        email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { full_name: fullName, email },
+      // 4) Preferência: convite por e-mail (o membro define a própria senha).
+      //    Fallback automático para senha temporária se o e-mail do Supabase
+      //    Auth ainda não estiver configurado.
+      const base = process.env.NEXT_PUBLIC_SITE_URL
+        || `https://${request.headers.get('host') || 'lexflowsaas.vercel.app'}`
+      const redirectTo = `${base}/alterar-senha`
+
+      const { data: inviteData, error: inviteErr } = await serviceClient.auth.admin.inviteUserByEmail(email, {
+        data: { full_name: fullName, email },
+        redirectTo,
       })
 
-      if (createErr || !authData.user) {
-        return NextResponse.json({ error: 'Erro ao criar conta: ' + (createErr?.message || 'desconhecido') }, { status: 400 })
+      if (!inviteErr && inviteData?.user) {
+        userId = inviteData.user.id
+        invited = true
+      } else {
+        tempPassword = gerarSenhaTemporaria()
+        const { data: authData, error: createErr } = await serviceClient.auth.admin.createUser({
+          email,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { full_name: fullName, email },
+        })
+        if (createErr || !authData.user) {
+          return NextResponse.json(
+            { error: 'Erro ao criar conta: ' + (createErr?.message || inviteErr?.message || 'desconhecido') },
+            { status: 400 }
+          )
+        }
+        userId = authData.user.id
       }
-      userId = authData.user.id
 
       await serviceClient.from('profiles').upsert({
         id: userId,
@@ -139,18 +158,21 @@ export async function POST(request: NextRequest) {
       action: existingProfile ? 'member_linked' : 'member_created',
       entity: 'organization_members',
       entity_id: userId,
-      new_data: { email, org_role: orgRole, profile_role: PROFILE_ROLE[orgRole], created: !existingProfile },
+      new_data: { email, org_role: orgRole, profile_role: PROFILE_ROLE[orgRole], created: !existingProfile, invited },
     })
 
     return NextResponse.json({
       success: true,
       userId,
       created: !existingProfile,
-      // Senha temporária só é devolvida quando a conta foi criada agora.
+      invited,
+      // Senha temporária só é devolvida no fallback (e-mail não configurado).
       tempPassword,
       message: existingProfile
         ? 'Usuário existente vinculado ao escritório.'
-        : 'Membro criado e vinculado. Repasse a senha temporária com segurança.',
+        : invited
+          ? `Convite enviado por e-mail para ${email}. O membro define a senha pelo link recebido.`
+          : 'Membro criado e vinculado. Repasse a senha temporária com segurança.',
     })
   } catch (error: any) {
     console.error('criar-membro error:', error)

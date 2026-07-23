@@ -178,9 +178,11 @@ export default function MembrosPage() {
         return
       }
 
-      if (data.tempPassword) {
+      if (data.invited) {
+        setSuccess(data.message || 'Convite enviado por e-mail. O membro define a senha pelo link recebido.')
+      } else if (data.tempPassword) {
         setCreatedPassword(data.tempPassword)
-        setSuccess('Membro criado! Repasse a senha temporária abaixo com segurança.')
+        setSuccess('Conta criada! O convite por e-mail ainda não está configurado — repasse a senha temporária abaixo com segurança.')
       } else {
         setSuccess('Membro vinculado com sucesso!')
       }
@@ -460,10 +462,10 @@ export default function MembrosPage() {
       <div style={{ marginTop: '2rem', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: '#0d1f38' }}>
         <h3 style={{ color: 'white', fontWeight: 500, marginBottom: '0.5rem' }}>ℹ️ Como adicionar membros</h3>
         <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-          Cadastre Advogados e Assistentes do seu escritório. Se o e-mail ainda não tiver
-          conta, o sistema cria a conta e mostra uma <strong>senha temporária</strong> para você
-          repassar ao membro (ele deve trocá-la no primeiro acesso). Recurso disponível nos
-          planos PRO e PREMIUM. Advogados exigem número da OAB.
+          Cadastre Advogados e Assistentes do seu escritório. Se o e-mail ainda não tiver conta,
+          o sistema envia um <strong>convite por e-mail</strong> para o membro definir a própria
+          senha. (Enquanto o e-mail não estiver configurado, o sistema mostra uma senha temporária
+          para repasse.) Recurso disponível nos planos PRO e PREMIUM. Advogados exigem número da OAB.
         </p>
       </div>
     </div>
