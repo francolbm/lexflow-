@@ -2,14 +2,61 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Shield, BarChart3, CheckCircle, ArrowRight, Menu, X } from 'lucide-react'
+import { Zap, Shield, BarChart3, CheckCircle, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const plans = [
+  {
+    name: 'Start', price: 'R$197', desc: 'Ideal para advogados autônomos', highlighted: false,
+    features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo', 'Histórico de versões'],
+  },
+  {
+    name: 'Pro', price: 'R$497', desc: 'Para escritórios em crescimento', highlighted: true,
+    features: ['30 demandas/mês', 'Todos os tipos de documentos', 'Suporte prioritário', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido'],
+  },
+  {
+    name: 'Premium', price: 'R$997', desc: 'Para grandes escritórios', highlighted: false,
+    features: ['80 demandas/mês', 'Todos os tipos de documentos', 'Suporte dedicado 24/7', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido', 'Relatórios avançados', 'Múltiplos usuários'],
+  },
+]
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Carrossel de planos
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [activePlan, setActivePlan] = useState(1) // começa no "Pro" (Mais Popular)
+
+  const centerOn = (i: number, smooth = true) => {
+    const track = trackRef.current
+    if (!track) return
+    const child = track.children[i] as HTMLElement | undefined
+    if (!child) return
+    const left = child.offsetLeft - (track.clientWidth - child.clientWidth) / 2
+    track.scrollTo({ left, behavior: smooth ? 'smooth' : 'auto' })
+  }
+
+  const handlePlansScroll = () => {
+    const track = trackRef.current
+    if (!track) return
+    const center = track.scrollLeft + track.clientWidth / 2
+    let best = 0, bestDist = Infinity
+    Array.from(track.children).forEach((c, i) => {
+      const el = c as HTMLElement
+      const cc = el.offsetLeft + el.clientWidth / 2
+      const d = Math.abs(cc - center)
+      if (d < bestDist) { bestDist = d; best = i }
+    })
+    setActivePlan(best)
+  }
+
+  useEffect(() => {
+    const t = setTimeout(() => centerOn(1, false), 60)
+    return () => clearTimeout(t)
+  }, [])
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#0a192f' }}>
@@ -193,86 +240,98 @@ export default function LandingPage() {
               Escolha o plano ideal para o volume de demandas do seu escritório.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Start */}
-            <Card className="border border-white/10 relative" style={{ backgroundColor: '#112240' }}>
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-gray-300 text-lg font-medium">Start</CardTitle>
-                <div className="mt-3">
-                  <span className="text-4xl font-bold text-white">R$197</span>
-                  <span className="text-gray-400 ml-1">/mês</span>
-                </div>
-                <p className="text-gray-500 text-sm mt-2">Ideal para advogados autônomos</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-8">
-                  {['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo', 'Histórico de versões'].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                      <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/cadastro">
-                  <Button className="w-full gold-btn font-semibold">Começar agora</Button>
-                </Link>
-              </CardContent>
-            </Card>
+          <div className="relative max-w-5xl mx-auto">
+            {/* Seta anterior */}
+            <button
+              onClick={() => centerOn(Math.max(0, activePlan - 1))}
+              disabled={activePlan === 0}
+              aria-label="Plano anterior"
+              className="hidden sm:flex absolute -left-2 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ borderColor: '#d4af3766', backgroundColor: '#0a192fcc', color: '#d4af37', backdropFilter: 'blur(4px)' }}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
 
-            {/* Pro */}
-            <Card className="relative" style={{ backgroundColor: '#112240', border: '2px solid #d4af37' }}>
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge style={{ backgroundColor: '#d4af37', color: '#0a192f' }} className="font-semibold px-4 py-1">
-                  Mais Popular
-                </Badge>
-              </div>
-              <CardHeader className="text-center pb-4 pt-6">
-                <CardTitle className="text-white text-lg font-medium">Pro</CardTitle>
-                <div className="mt-3">
-                  <span className="text-4xl font-bold text-white">R$497</span>
-                  <span className="text-gray-400 ml-1">/mês</span>
+            {/* Trilho do carrossel */}
+            <div
+              ref={trackRef}
+              onScroll={handlePlansScroll}
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-8 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {plans.map((plan, i) => (
+                <div
+                  key={plan.name}
+                  className={`snap-center shrink-0 w-[80%] sm:w-[340px] transition-all duration-300 ease-out ${i === activePlan ? 'scale-105' : 'scale-95 opacity-70'}`}
+                >
+                  <Card
+                    className="relative h-full"
+                    style={{
+                      backgroundColor: '#112240',
+                      border: plan.highlighted ? '2px solid #d4af37' : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: i === activePlan ? '0 24px 55px -14px rgba(212,175,55,0.4)' : 'none',
+                    }}
+                  >
+                    {plan.highlighted && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                        <Badge style={{ backgroundColor: '#d4af37', color: '#0a192f' }} className="font-semibold px-4 py-1">
+                          Mais Popular
+                        </Badge>
+                      </div>
+                    )}
+                    <CardHeader className="text-center pb-4 pt-6">
+                      <CardTitle className={`text-lg font-medium ${plan.highlighted ? 'text-white' : 'text-gray-300'}`}>
+                        {plan.name}
+                      </CardTitle>
+                      <div className="mt-3">
+                        <span className="text-4xl font-bold text-white">{plan.price}</span>
+                        <span className="text-gray-400 ml-1">/mês</span>
+                      </div>
+                      <p className={`text-sm mt-2 ${plan.highlighted ? 'text-gray-400' : 'text-gray-500'}`}>{plan.desc}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-3 mb-8">
+                        {plan.features.map((f) => (
+                          <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
+                            <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
+                            {f}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link href="/cadastro">
+                        <Button className="w-full gold-btn font-semibold">Começar agora</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 </div>
-                <p className="text-gray-400 text-sm mt-2">Para escritórios em crescimento</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-8">
-                  {['30 demandas/mês', 'Todos os tipos de documentos', 'Suporte prioritário', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido'].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                      <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/cadastro">
-                  <Button className="w-full gold-btn font-semibold">Começar agora</Button>
-                </Link>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
 
-            {/* Premium */}
-            <Card className="border border-white/10 relative" style={{ backgroundColor: '#112240' }}>
-              <CardHeader className="text-center pb-4">
-                <CardTitle className="text-gray-300 text-lg font-medium">Premium</CardTitle>
-                <div className="mt-3">
-                  <span className="text-4xl font-bold text-white">R$997</span>
-                  <span className="text-gray-400 ml-1">/mês</span>
-                </div>
-                <p className="text-gray-500 text-sm mt-2">Para grandes escritórios</p>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-8">
-                  {['80 demandas/mês', 'Todos os tipos de documentos', 'Suporte dedicado 24/7', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido', 'Relatórios avançados', 'Múltiplos usuários'].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                      <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/cadastro">
-                  <Button className="w-full gold-btn font-semibold">Começar agora</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            {/* Seta próxima */}
+            <button
+              onClick={() => centerOn(Math.min(plans.length - 1, activePlan + 1))}
+              disabled={activePlan === plans.length - 1}
+              aria-label="Próximo plano"
+              className="hidden sm:flex absolute -right-2 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ borderColor: '#d4af3766', backgroundColor: '#0a192fcc', color: '#d4af37', backdropFilter: 'blur(4px)' }}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+
+            {/* Indicadores (dots) */}
+            <div className="flex justify-center gap-2.5 mt-6">
+              {plans.map((plan, i) => (
+                <button
+                  key={plan.name}
+                  onClick={() => centerOn(i)}
+                  aria-label={`Ver plano ${plan.name}`}
+                  className="h-2.5 rounded-full transition-all duration-300"
+                  style={{
+                    width: i === activePlan ? '1.75rem' : '0.625rem',
+                    backgroundColor: i === activePlan ? '#d4af37' : 'rgba(255,255,255,0.25)',
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
