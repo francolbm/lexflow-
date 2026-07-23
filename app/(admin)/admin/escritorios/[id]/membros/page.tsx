@@ -46,10 +46,12 @@ export default function MembrosPage() {
   const [newMemberEmail, setNewMemberEmail] = useState('')
   const [newMemberName, setNewMemberName] = useState('')
   const [newMemberCpf, setNewMemberCpf] = useState('')
+  const [newMemberOab, setNewMemberOab] = useState('')
   const [newMemberRole, setNewMemberRole] = useState('lawyer')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [createdPassword, setCreatedPassword] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -140,68 +142,56 @@ export default function MembrosPage() {
       setError('Preencha o nome e e-mail do membro')
       return
     }
-
-    // Validate CPF if provided
     if (newMemberCpf && getCpfError()) {
       setError('CPF inválido. Verifique o número e tente novamente.')
+      return
+    }
+    if (newMemberRole === 'lawyer' && !newMemberOab.trim()) {
+      setError('A OAB é obrigatória para cadastrar um Advogado.')
       return
     }
 
     setAdding(true)
     setError('')
+    setCreatedPassword(null)
 
     try {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', newMemberEmail)
-        .single()
+      // A criação da conta e o vínculo são feitos no servidor (service role),
+      // com gate de plano PRO/PREMIUM. Se o e-mail já existir, apenas vincula.
+      const res = await fetch('/api/escritorio/membros/criar', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          orgId,
+          email: newMemberEmail,
+          fullName: newMemberName,
+          cpf: newMemberCpf || null,
+          oabNumber: newMemberRole === 'lawyer' ? newMemberOab : null,
+          orgRole: newMemberRole,
+        }),
+      })
+      const data = await res.json()
 
-      let userId: string
+      if (!res.ok) {
+        setError(data.error || 'Erro ao cadastrar membro')
+        setAdding(false)
+        return
+      }
 
-      if (existingProfile) {
-        userId = existingProfile.id
-        
-        // Update profile with CPF if provided
-        if (newMemberCpf && getCpfError() === null) {
-          await supabase
-            .from('profiles')
-            .update({ cpf: newMemberCpf })
-            .eq('id', userId)
-        }
+      if (data.tempPassword) {
+        setCreatedPassword(data.tempPassword)
+        setSuccess('Membro criado! Repasse a senha temporária abaixo com segurança.')
       } else {
-        setError('Usuário não encontrado. O usuário precisa se cadastrar primeiro na plataforma.')
-        setAdding(false)
-        return
+        setSuccess('Membro vinculado com sucesso!')
       }
 
-      const existingMember = members.find(m => m.user_id === userId)
-      if (existingMember) {
-        setError('Este usuário já é membro deste escritório')
-        setAdding(false)
-        return
-      }
-
-      const { error: addError } = await supabase
-        .from('organization_members')
-        .insert({
-          organization_id: orgId,
-          user_id: userId,
-          role: newMemberRole,
-          status: 'active'
-        })
-
-      if (addError) throw addError
-
-      setSuccess('Membro adicionado com sucesso!')
       setNewMemberEmail('')
       setNewMemberName('')
       setNewMemberCpf('')
-      setNewMemberRole('member')
+      setNewMemberOab('')
+      setNewMemberRole('lawyer')
       setShowAddForm(false)
       loadData()
-
-      setTimeout(() => setSuccess(''), 3000)
     } catch (err: any) {
       setError(err.message || 'Erro ao adicionar membro')
     } finally {
@@ -277,6 +267,20 @@ export default function MembrosPage() {
         </div>
       )}
 
+      {createdPassword && (
+        <div style={{ marginBottom: '1rem', padding: '1rem', borderRadius: '0.5rem', backgroundColor: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)' }}>
+          <p style={{ color: '#fbbf24', fontWeight: 600, fontSize: '0.875rem', marginBottom: '0.25rem' }}>Senha temporária do novo membro</p>
+          <p style={{ color: '#9ca3af', fontSize: '0.8125rem', marginBottom: '0.5rem' }}>
+            Repasse com segurança. O membro deve trocá-la no primeiro acesso.
+          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <code style={{ color: 'white', backgroundColor: '#0a192f', padding: '0.4rem 0.6rem', borderRadius: '0.375rem', fontSize: '0.95rem', letterSpacing: '0.05em' }}>{createdPassword}</code>
+            <Button variant='outline' size='sm' onClick={() => navigator.clipboard?.writeText(createdPassword)} className='border-white/20 text-gray-300'>Copiar</Button>
+            <Button variant='ghost' size='sm' onClick={() => setCreatedPassword(null)} className='text-gray-500' style={{ marginLeft: 'auto' }}>Fechar</Button>
+          </div>
+        </div>
+      )}
+
       {showAddForm && (
         <Card className='border-0 mb-6' style={{ backgroundColor: '#0d1f38' }}>
           <CardHeader className='pb-3'>
@@ -321,7 +325,19 @@ export default function MembrosPage() {
                   <p style={{ color: '#f87171', fontSize: '0.75rem', marginTop: '0.25rem' }}>{getCpfError()}</p>
                 )}
               </div>
-              
+
+              {newMemberRole === 'lawyer' && (
+                <div className='space-y-2'>
+                  <Label className='text-gray-300 text-sm'>OAB</Label>
+                  <Input
+                    placeholder='Número da OAB'
+                    value={newMemberOab}
+                    onChange={(e) => setNewMemberOab(e.target.value)}
+                    className='bg-white/5 border-white/20 text-white placeholder:text-gray-500'
+                  />
+                </div>
+              )}
+
               <div className='space-y-2'>
                 <Label className='text-gray-300 text-sm'>Cargo</Label>
                 <Select value={newMemberRole} onValueChange={(v) => v && setNewMemberRole(v)}>
@@ -444,8 +460,10 @@ export default function MembrosPage() {
       <div style={{ marginTop: '2rem', padding: '1rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', backgroundColor: '#0d1f38' }}>
         <h3 style={{ color: 'white', fontWeight: 500, marginBottom: '0.5rem' }}>ℹ️ Como adicionar membros</h3>
         <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-          Para adicionar um membro, o usuário já precisa estar cadastrado na plataforma. 
-          O sistema verificará se o e-mail existe antes de adicionar.
+          Cadastre Advogados e Assistentes do seu escritório. Se o e-mail ainda não tiver
+          conta, o sistema cria a conta e mostra uma <strong>senha temporária</strong> para você
+          repassar ao membro (ele deve trocá-la no primeiro acesso). Recurso disponível nos
+          planos PRO e PREMIUM. Advogados exigem número da OAB.
         </p>
       </div>
     </div>
