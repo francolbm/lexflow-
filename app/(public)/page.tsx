@@ -10,15 +10,19 @@ import { Zap, Shield, BarChart3, CheckCircle, ArrowRight, Menu, X, ChevronLeft, 
 
 const plans = [
   {
-    name: 'Start', price: 'R$197', desc: 'Ideal para advogados autônomos', highlighted: false,
+    name: 'Teste grátis', price: 'R$0', desc: 'Experimente sem compromisso', highlighted: false, cta: 'Experimentar grátis',
+    features: ['1 demanda', 'Verificação de OAB', 'Todos os tipos de documentos', 'Sem cartão de crédito'],
+  },
+  {
+    name: 'Start', price: 'R$197', desc: 'Ideal para advogados autônomos', highlighted: false, cta: 'Começar agora',
     features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo', 'Histórico de versões'],
   },
   {
-    name: 'Pro', price: 'R$497', desc: 'Para escritórios em crescimento', highlighted: true,
+    name: 'Pro', price: 'R$497', desc: 'Para escritórios em crescimento', highlighted: true, cta: 'Começar agora',
     features: ['30 demandas/mês', 'Todos os tipos de documentos', 'Suporte prioritário', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido'],
   },
   {
-    name: 'Premium', price: 'R$997', desc: 'Para grandes escritórios', highlighted: false,
+    name: 'Premium', price: 'R$997', desc: 'Para grandes escritórios', highlighted: false, cta: 'Começar agora',
     features: ['80 demandas/mês', 'Todos os tipos de documentos', 'Suporte dedicado 24/7', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido', 'Relatórios avançados', 'Múltiplos usuários'],
   },
 ]
@@ -26,9 +30,9 @@ const plans = [
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Carrossel de planos
+  // Carrossel de planos (só no mobile; no desktop vira grade)
   const trackRef = useRef<HTMLDivElement>(null)
-  const [activePlan, setActivePlan] = useState(1) // começa no "Pro" (Mais Popular)
+  const [activePlan, setActivePlan] = useState(2) // começa no "Pro" (Mais Popular)
 
   const centerOn = (i: number, smooth = true) => {
     const track = trackRef.current
@@ -54,7 +58,7 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    const t = setTimeout(() => centerOn(1, false), 60)
+    const t = setTimeout(() => centerOn(2, false), 60)
     return () => clearTimeout(t)
   }, [])
 
@@ -240,13 +244,13 @@ export default function LandingPage() {
               Escolha o plano ideal para o volume de demandas do seu escritório.
             </p>
           </div>
-          <div className="relative max-w-5xl mx-auto">
-            {/* Seta anterior */}
+          <div className="relative max-w-6xl mx-auto">
+            {/* Seta anterior (só no carrossel mobile) */}
             <button
               onClick={() => centerOn(Math.max(0, activePlan - 1))}
               disabled={activePlan === 0}
               aria-label="Plano anterior"
-              className="hidden sm:flex absolute -left-2 lg:-left-6 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="hidden sm:flex md:hidden absolute -left-2 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
               style={{ borderColor: '#d4af3766', backgroundColor: '#0a192fcc', color: '#d4af37', backdropFilter: 'blur(4px)' }}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -256,12 +260,12 @@ export default function LandingPage() {
             <div
               ref={trackRef}
               onScroll={handlePlansScroll}
-              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-8 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-10 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:overflow-visible md:snap-none md:px-0 md:py-8"
             >
               {plans.map((plan, i) => (
                 <div
                   key={plan.name}
-                  className={`snap-center shrink-0 w-[80%] sm:w-[340px] transition-all duration-300 ease-out ${i === activePlan ? 'scale-105' : 'scale-95 opacity-70'}`}
+                  className={`snap-center shrink-0 w-[80%] sm:w-[300px] md:w-auto transition-all duration-300 ease-out md:!scale-100 md:!opacity-100 ${i === activePlan ? 'scale-105' : 'scale-95 opacity-70'}`}
                 >
                   <Card
                     className="relative h-full"
@@ -298,7 +302,7 @@ export default function LandingPage() {
                         ))}
                       </ul>
                       <Link href="/cadastro">
-                        <Button className="w-full gold-btn font-semibold">Começar agora</Button>
+                        <Button className="w-full gold-btn font-semibold">{plan.cta || 'Começar agora'}</Button>
                       </Link>
                     </CardContent>
                   </Card>
@@ -311,14 +315,14 @@ export default function LandingPage() {
               onClick={() => centerOn(Math.min(plans.length - 1, activePlan + 1))}
               disabled={activePlan === plans.length - 1}
               aria-label="Próximo plano"
-              className="hidden sm:flex absolute -right-2 lg:-right-6 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+              className="hidden sm:flex md:hidden absolute -right-2 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border transition-all shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
               style={{ borderColor: '#d4af3766', backgroundColor: '#0a192fcc', color: '#d4af37', backdropFilter: 'blur(4px)' }}
             >
               <ChevronRight className="h-5 w-5" />
             </button>
 
-            {/* Indicadores (dots) */}
-            <div className="flex justify-center gap-2.5 mt-6">
+            {/* Indicadores (dots) — só no carrossel mobile */}
+            <div className="flex justify-center gap-2.5 mt-6 md:hidden">
               {plans.map((plan, i) => (
                 <button
                   key={plan.name}
