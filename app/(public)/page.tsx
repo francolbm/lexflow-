@@ -265,8 +265,16 @@ export default function LandingPage() {
               {plans.map((plan, i) => (
                 <div
                   key={plan.name}
-                  className={`snap-center shrink-0 w-[80%] sm:w-[300px] md:w-auto transition-all duration-300 ease-out md:!scale-100 md:!opacity-100 ${i === activePlan ? 'scale-105' : 'scale-95 opacity-70'}`}
+                  className={`relative snap-center shrink-0 w-[80%] sm:w-[300px] md:w-auto transition-all duration-300 ease-out md:!scale-100 md:!opacity-100 ${i === activePlan ? 'scale-105' : 'scale-95 opacity-70'}`}
                 >
+                  {/* Selo fora do Card (o Card tem overflow-hidden e cortava o selo) */}
+                  {plan.highlighted && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                      <Badge style={{ backgroundColor: '#d4af37', color: '#0a192f' }} className="font-semibold px-4 py-1 shadow-lg">
+                        Mais Popular
+                      </Badge>
+                    </div>
+                  )}
                   <Card
                     className="relative h-full"
                     style={{
@@ -275,13 +283,6 @@ export default function LandingPage() {
                       boxShadow: i === activePlan ? '0 24px 55px -14px rgba(212,175,55,0.4)' : 'none',
                     }}
                   >
-                    {plan.highlighted && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                        <Badge style={{ backgroundColor: '#d4af37', color: '#0a192f' }} className="font-semibold px-4 py-1">
-                          Mais Popular
-                        </Badge>
-                      </div>
-                    )}
                     <CardHeader className="text-center pb-4 pt-6">
                       <CardTitle className={`text-lg font-medium ${plan.highlighted ? 'text-white' : 'text-gray-300'}`}>
                         {plan.name}
