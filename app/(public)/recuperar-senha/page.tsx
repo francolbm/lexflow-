@@ -41,7 +41,7 @@ export default function RecuperarSenhaPage() {
         <div className='text-center mb-8'>
           <Link href='/' className='inline-flex items-center gap-2 group'>
             <Scale className='h-8 w-8 group-hover:scale-110 transition-transform' style={{ color: '#d4af37' }} />
-            <span className='text-2xl font-bold text-white tracking-wide'>LexFlow</span>
+            <span className='text-2xl font-bold text-white tracking-wide'>PennaJus</span>
           </Link>
         </div>
 

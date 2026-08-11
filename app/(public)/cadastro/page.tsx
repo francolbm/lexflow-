@@ -195,7 +195,7 @@ export default function CadastroPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 group">
             <Scale className="h-8 w-8 group-hover:scale-110 transition-transform" style={{ color: '#d4af37' }} />
-            <span className="text-2xl font-bold text-white tracking-wide">LexFlow</span>
+            <span className="text-2xl font-bold text-white tracking-wide">PennaJus</span>
           </Link>
         </div>
 
@@ -203,7 +203,7 @@ export default function CadastroPage() {
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-white text-2xl">Criar conta gratuita</CardTitle>
             <CardDescription className="text-gray-400">
-              Comece a usar o LexFlow hoje mesmo
+              Comece a usar o PennaJus hoje mesmo
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4">

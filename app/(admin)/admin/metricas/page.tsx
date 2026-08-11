@@ -52,7 +52,7 @@ export default async function MetricasPage() {
     <div className="px-4 sm:px-6 lg:px-8 py-8" style={{ minHeight: '100vh', backgroundColor: '#060f1e' }}>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Métricas Gerais</h1>
-        <p className="text-gray-400 mt-1">Visão consolidada da operação LexFlow</p>
+        <p className="text-gray-400 mt-1">Visão consolidada da operação PennaJus</p>
       </div>
 
       {/* KPIs principais */}

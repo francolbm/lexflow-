@@ -38,7 +38,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Scale className="h-6 w-6" style={{ color: '#d4af37' }} />
-          <span className="text-lg font-bold text-white tracking-wide">LexFlow</span>
+          <span className="text-lg font-bold text-white tracking-wide">PennaJus</span>
         </Link>
         {onClose && (
           <button onClick={onClose} className="text-gray-400 hover:text-white lg:hidden">

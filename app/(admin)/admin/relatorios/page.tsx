@@ -64,7 +64,7 @@ export default async function RelatoriosPage() {
         <div className='flex items-center justify-between'>
           <div>
             <h1 className='text-2xl font-bold text-white'>Relatorios</h1>
-            <p className='text-gray-400 mt-1'>Analises e insights da operacao LexFlow</p>
+            <p className='text-gray-400 mt-1'>Analises e insights da operacao PennaJus</p>
           </div>
           <button className='flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all' style={{ backgroundColor: '#d4af37', color: '#060f1e' }}>
             <Download className='h-4 w-4' />

@@ -11,8 +11,8 @@ export default function PoliticaDePrivacidade() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo-eagle.png" alt="LexFlow" width={36} height={36} className="rounded" />
-              <span className="text-xl font-bold text-white tracking-wide">LexFlow</span>
+              <Image src="/logo-eagle.png" alt="PennaJus" width={36} height={36} className="rounded" />
+              <span className="text-xl font-bold text-white tracking-wide">PennaJus</span>
             </Link>
             <Link href="/cadastro">
               <button className="text-sm px-4 py-2 rounded-md font-semibold" style={{ backgroundColor: '#d4af37', color: '#0a192f' }}>
@@ -40,7 +40,7 @@ export default function PoliticaDePrivacidade() {
               <p className="text-sm font-semibold text-white mb-2">🔒 Compromisso com a LGPD</p>
               <p className="text-sm text-gray-400">
                 Esta Política foi elaborada em conformidade com a <strong className="text-white">Lei Geral de Proteção de Dados Pessoais (LGPD) — Lei nº 13.709/2018</strong>.
-                O LexFlow adota os princípios de <em>privacy by design</em>, minimização de dados e 
+                O PennaJus adota os princípios de <em>privacy by design</em>, minimização de dados e 
                 transparência no tratamento de informações pessoais.
               </p>
             </div>
@@ -49,16 +49,16 @@ export default function PoliticaDePrivacidade() {
               <h2 className="text-xl font-bold text-white mb-3">1. Controlador de Dados</h2>
               <p>O controlador dos dados pessoais tratados pela Plataforma é:</p>
               <div className="mt-3 p-4 rounded-lg" style={{ backgroundColor: '#0a192f' }}>
-                <p><strong className="text-white">LexFlow</strong></p>
+                <p><strong className="text-white">PennaJus</strong></p>
                 <p className="text-gray-400 text-sm mt-1">Responsável: Franco Luiz Bianchini Maciel</p>
-                <p className="text-gray-400 text-sm">E-mail do DPO: privacidade@lexflow.com.br</p>
-                <p className="text-gray-400 text-sm">Site: ayuilfql.gensparkclaw.com</p>
+                <p className="text-gray-400 text-sm">E-mail do DPO: privacidade@pennajus.com.br</p>
+                <p className="text-gray-400 text-sm">Site: pennajus.com.br</p>
               </div>
             </section>
 
             <section>
               <h2 className="text-xl font-bold text-white mb-3">2. Dados Coletados</h2>
-              <p>O LexFlow coleta os seguintes dados pessoais:</p>
+              <p>O PennaJus coleta os seguintes dados pessoais:</p>
 
               <h3 className="text-lg font-semibold text-white mt-5 mb-2">2.1 Dados de Cadastro</h3>
               <ul className="space-y-1 list-disc list-inside text-gray-400">
@@ -86,7 +86,7 @@ export default function PoliticaDePrivacidade() {
               <h3 className="text-lg font-semibold text-white mt-5 mb-2">2.4 Dados de Pagamento</h3>
               <ul className="space-y-1 list-disc list-inside text-gray-400">
                 <li>E-mail de faturamento</li>
-                <li>Dados de cartão de crédito processados exclusivamente pelo gateway Stripe (não armazenados pelo LexFlow)</li>
+                <li>Dados de cartão de crédito processados exclusivamente pelo gateway Stripe (não armazenados pelo PennaJus)</li>
               </ul>
             </section>
 
@@ -122,10 +122,10 @@ export default function PoliticaDePrivacidade() {
 
             <section>
               <h2 className="text-xl font-bold text-white mb-3">4. Compartilhamento de Dados</h2>
-              <p>O LexFlow <strong className="text-white">não vende</strong> dados pessoais a terceiros. Os dados podem ser compartilhados apenas com:</p>
+              <p>O PennaJus <strong className="text-white">não vende</strong> dados pessoais a terceiros. Os dados podem ser compartilhados apenas com:</p>
               <ul className="mt-3 space-y-3 list-none">
                 {[
-                  ['Agentes de IA LexFlow', 'Agentes de IA especializados operados pela LexFlow, com supervisão técnica, vinculados a controles rigorosos de confidencialidade e segurança, exclusivamente para produção das demandas.'],
+                  ['Agentes de IA PennaJus', 'Agentes de IA especializados operados pela PennaJus, com supervisão técnica, vinculados a controles rigorosos de confidencialidade e segurança, exclusivamente para produção das demandas.'],
                   ['Supabase (infraestrutura)', 'Provedor de banco de dados e autenticação, certificado SOC 2 Type II.'],
                   ['Stripe (pagamentos)', 'Gateway de pagamento certificado PCI-DSS Level 1. Não recebe dados dos clientes do Usuário.'],
                   ['Provedores de IA', 'APIs de IA (ex: OpenAI) utilizadas para apoio na produção dos rascunhos, com contratos de zero data retention.'],
@@ -145,20 +145,20 @@ export default function PoliticaDePrivacidade() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">5. Dados dos Clientes do Usuário</h2>
               <p>
-                O LexFlow reconhece que os briefings e documentos enviados podem conter dados pessoais de 
+                O PennaJus reconhece que os briefings e documentos enviados podem conter dados pessoais de 
                 clientes do Usuário (terceiros). Nessa relação:
               </p>
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
                 <li>O <strong className="text-white">Usuário é o controlador</strong> dos dados de seus clientes e é responsável pela base legal para compartilhá-los;</li>
-                <li>O <strong className="text-white">LexFlow atua como operador</strong> desses dados, tratando-os exclusivamente para a prestação do serviço;</li>
-                <li>Os dados de clientes do Usuário <strong className="text-white">nunca serão usados</strong> para marketing, treinamento de modelos de IA ou compartilhados com terceiros além dos Agentes de IA especializados operados pela LexFlow, com supervisão técnica;</li>
+                <li>O <strong className="text-white">PennaJus atua como operador</strong> desses dados, tratando-os exclusivamente para a prestação do serviço;</li>
+                <li>Os dados de clientes do Usuário <strong className="text-white">nunca serão usados</strong> para marketing, treinamento de modelos de IA ou compartilhados com terceiros além dos Agentes de IA especializados operados pela PennaJus, com supervisão técnica;</li>
                 <li>O Usuário deve garantir que seus clientes estão cientes do compartilhamento de seus dados para produção documental.</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-xl font-bold text-white mb-3">6. Segurança dos Dados</h2>
-              <p>O LexFlow adota as seguintes medidas de segurança:</p>
+              <p>O PennaJus adota as seguintes medidas de segurança:</p>
               <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   ['🔐 Criptografia', 'TLS em trânsito + AES-256 em repouso'],
@@ -207,7 +207,7 @@ export default function PoliticaDePrivacidade() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">7A. Tratamento Automatizado por Inteligência Artificial</h2>
               <p>
-                O LexFlow utiliza <strong className="text-white">agentes de IA especializados em direito</strong> como núcleo de produção documental.
+                O PennaJus utiliza <strong className="text-white">agentes de IA especializados em direito</strong> como núcleo de produção documental.
                 Isso significa que os briefings e documentos de apoio fornecidos pelo Usuário são processados de forma automatizada por inteligência artificial para gerar as minutas jurídicas.
               </p>
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
@@ -239,7 +239,7 @@ export default function PoliticaDePrivacidade() {
                 ))}
               </div>
               <p className="mt-4 text-sm text-gray-400">
-                Para exercer qualquer direito, envie sua solicitação para <strong className="text-white">privacidade@lexflow.com.br</strong>. 
+                Para exercer qualquer direito, envie sua solicitação para <strong className="text-white">privacidade@pennajus.com.br</strong>. 
                 Responderemos em até <strong className="text-white">15 dias úteis</strong>.
               </p>
             </section>
@@ -270,7 +270,7 @@ export default function PoliticaDePrivacidade() {
                 Nosso Encarregado pelo Tratamento de Dados Pessoais (DPO) pode ser contatado em:
               </p>
               <div className="mt-3 p-4 rounded-lg" style={{ backgroundColor: '#0a192f' }}>
-                <p className="text-gray-400 text-sm">📧 privacidade@lexflow.com.br</p>
+                <p className="text-gray-400 text-sm">📧 privacidade@pennajus.com.br</p>
                 <p className="text-gray-400 text-sm mt-1">Tempo de resposta: até 15 dias úteis</p>
               </div>
             </section>
@@ -288,7 +288,7 @@ export default function PoliticaDePrivacidade() {
 
           {/* Rodapé */}
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-xs">© 2026 LexFlow · Todos os direitos reservados</p>
+            <p className="text-gray-500 text-xs">© 2026 PennaJus · Todos os direitos reservados</p>
             <Link href="/termos" className="text-sm" style={{ color: '#d4af37' }}>
               Ver Termos de Uso →
             </Link>

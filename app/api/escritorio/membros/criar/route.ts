@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       //    Fallback automático para senha temporária se o e-mail do Supabase
       //    Auth ainda não estiver configurado.
       const base = process.env.NEXT_PUBLIC_SITE_URL
-        || `https://${request.headers.get('host') || 'lexflowsaas.vercel.app'}`
+        || `https://${request.headers.get('host') || 'pennajus.com.br'}`
       const redirectTo = `${base}/alterar-senha`
 
       const { data: inviteData, error: inviteErr } = await serviceClient.auth.admin.inviteUserByEmail(email, {

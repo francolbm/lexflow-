@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backups locais
+lib/ai/claude.ts.bak
+public/logo-eagle.old.png

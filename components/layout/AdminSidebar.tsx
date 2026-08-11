@@ -56,9 +56,9 @@ export function AdminSidebar({ profile, onClose }: AdminSidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Image src="/logo-eagle.png" alt="LexFlow" width={30} height={30} className="rounded" />
+          <Image src="/logo-eagle.png" alt="PennaJus" width={30} height={30} className="rounded" />
           <div>
-            <span className="text-lg font-bold text-white tracking-wide">LexFlow</span>
+            <span className="text-lg font-bold text-white tracking-wide">PennaJus</span>
             <span className="ml-2 text-xs px-1.5 py-0.5 rounded font-medium" style={{ backgroundColor: '#d4af3720', color: '#d4af37' }}>
               Admin
             </span>

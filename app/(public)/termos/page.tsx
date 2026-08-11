@@ -11,8 +11,8 @@ export default function TermosDeUso() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <Image src="/logo-eagle.png" alt="LexFlow" width={36} height={36} className="rounded" />
-              <span className="text-xl font-bold text-white tracking-wide">LexFlow</span>
+              <Image src="/logo-eagle.png" alt="PennaJus" width={36} height={36} className="rounded" />
+              <span className="text-xl font-bold text-white tracking-wide">PennaJus</span>
             </Link>
             <Link href="/cadastro">
               <button className="text-sm px-4 py-2 rounded-md font-semibold" style={{ backgroundColor: '#d4af37', color: '#0a192f' }}>
@@ -39,7 +39,7 @@ export default function TermosDeUso() {
             <div className="rounded-lg p-5 border-l-4" style={{ backgroundColor: '#0a192f', borderLeftColor: '#d4af37' }}>
               <p className="text-sm font-semibold text-white mb-2">⚠️ Aviso Importante</p>
               <p className="text-sm text-gray-400">
-                A plataforma LexFlow é um serviço de produção documental jurídica por <strong className="text-white">agentes de IA especializados em direito</strong>.
+                A plataforma PennaJus é um serviço de produção documental jurídica por <strong className="text-white">agentes de IA especializados em direito</strong>.
                 Nenhum conteúdo gerado pelos agentes de IA constitui assessoria jurídica, parecer ou opinião legal.
                 A responsabilidade técnica, ética e profissional sobre os documentos produzidos é
                 <strong className="text-white"> exclusivamente do advogado responsável pela revisão e aprovação</strong>, nos termos do Estatuto da OAB e da Resolução CNJ nº 615/2025.
@@ -49,8 +49,8 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">1. Identificação e Aceitação</h2>
               <p>
-                Estes Termos de Uso regulam o acesso e a utilização da plataforma <strong className="text-white">LexFlow</strong>, 
-                de titularidade de Franco Luiz Bianchini Maciel, doravante denominada <em>&quot;LexFlow&quot;</em> ou <em>&quot;Plataforma&quot;</em>.
+                Estes Termos de Uso regulam o acesso e a utilização da plataforma <strong className="text-white">PennaJus</strong>, 
+                de titularidade de Franco Luiz Bianchini Maciel, doravante denominada <em>&quot;PennaJus&quot;</em> ou <em>&quot;Plataforma&quot;</em>.
               </p>
               <p className="mt-3">
                 Ao realizar o cadastro e utilizar a Plataforma, o Usuário declara ter lido, compreendido e aceito integralmente 
@@ -65,12 +65,12 @@ export default function TermosDeUso() {
               <h2 className="text-xl font-bold text-white mb-3">2. Definições</h2>
               <ul className="space-y-2 list-none">
                 {[
-                  ['Plataforma', 'Sistema web LexFlow, disponível em ayuilfql.gensparkclaw.com e domínios associados.'],
+                  ['Plataforma', 'Sistema web PennaJus, disponível em pennajus.com.br e domínios associados.'],
                   ['Usuário', 'Advogado, bacharel em direito ou escritório de advocacia que utiliza a Plataforma mediante cadastro.'],
                   ['Demanda', 'Solicitação de produção documental jurídica enviada pelo Usuário à Plataforma.'],
-                  ['Minuta', 'Documento jurídico produzido pelos Agentes de IA LexFlow como apoio técnico, sujeito à revisão e aprovação obrigatória do advogado do escritório contratante.'],
-                  ['Agente de IA', 'Sistema de inteligência artificial especializado em direito, operado pela LexFlow, responsável pela triagem, produção e entrega das minutas.'],
-                  ['IA', 'Inteligência artificial treinada em jurisprudência e legislação brasileira, utilizada como núcleo de produção documental da Plataforma, com supervisão técnica da LexFlow.'],
+                  ['Minuta', 'Documento jurídico produzido pelos Agentes de IA PennaJus como apoio técnico, sujeito à revisão e aprovação obrigatória do advogado do escritório contratante.'],
+                  ['Agente de IA', 'Sistema de inteligência artificial especializado em direito, operado pela PennaJus, responsável pela triagem, produção e entrega das minutas.'],
+                  ['IA', 'Inteligência artificial treinada em jurisprudência e legislação brasileira, utilizada como núcleo de produção documental da Plataforma, com supervisão técnica da PennaJus.'],
                 ].map(([termo, def]) => (
                   <li key={termo} className="flex gap-2">
                     <span className="font-semibold text-white min-w-fit" style={{ color: '#d4af37' }}>• {termo}:</span>
@@ -83,7 +83,7 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">3. Natureza do Serviço e Limitações</h2>
               <p>
-                O LexFlow é um serviço de <strong className="text-white">apoio técnico à produção documental jurídica</strong>. 
+                O PennaJus é um serviço de <strong className="text-white">apoio técnico à produção documental jurídica</strong>. 
                 A Plataforma não presta assessoria jurídica, não representa clientes, não emite pareceres jurídicos e não substitui 
                 a atuação do advogado habilitado perante a OAB.
               </p>
@@ -91,7 +91,7 @@ export default function TermosDeUso() {
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
                 <li>Toda minuta entregue é um <strong className="text-white">rascunho de apoio</strong> e requer revisão técnica antes de qualquer uso profissional;</li>
                 <li>A <strong className="text-white">responsabilidade pela validação jurídica</strong> do conteúdo é exclusivamente do advogado signatário;</li>
-                <li>O LexFlow utiliza <strong className="text-white">agentes de IA especializados em direito</strong> como núcleo de produção documental, em conformidade com a Resolução CNJ nº 615/2025, cabendo ao advogado do escritório contratante a revisão e aprovação final;</li>
+                <li>O PennaJus utiliza <strong className="text-white">agentes de IA especializados em direito</strong> como núcleo de produção documental, em conformidade com a Resolução CNJ nº 615/2025, cabendo ao advogado do escritório contratante a revisão e aprovação final;</li>
                 <li>A aprovação da minuta na Plataforma representa o aceite formal do Usuário sobre o conteúdo e transfere a responsabilidade técnica para o advogado aprovador.</li>
               </ul>
             </section>
@@ -107,7 +107,7 @@ export default function TermosDeUso() {
               </ul>
               <p className="mt-3">
                 O Usuário é integralmente responsável pelas atividades realizadas com suas credenciais. 
-                Em caso de suspeita de acesso não autorizado, deve notificar imediatamente o LexFlow.
+                Em caso de suspeita de acesso não autorizado, deve notificar imediatamente o PennaJus.
               </p>
             </section>
 
@@ -141,12 +141,12 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">7. Confidencialidade e Sigilo Profissional</h2>
               <p>
-                O LexFlow reconhece a natureza sigilosa das informações jurídicas e se compromete a:
+                O PennaJus reconhece a natureza sigilosa das informações jurídicas e se compromete a:
               </p>
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
                 <li>Tratar todos os dados e documentos compartilhados com absoluta confidencialidade;</li>
                 <li>Não divulgar, compartilhar ou utilizar as informações dos clientes dos Usuários para qualquer finalidade além da produção do documento solicitado;</li>
-                <li>Garantir que os Agentes de IA especializados operados pela LexFlow processem os dados exclusivamente para a finalidade do serviço contratado, com supervisão técnica e controles de segurança adequados;</li>
+                <li>Garantir que os Agentes de IA especializados operados pela PennaJus processem os dados exclusivamente para a finalidade do serviço contratado, com supervisão técnica e controles de segurança adequados;</li>
                 <li>Não utilizar o conteúdo dos briefings ou documentos para treinar modelos de IA sem autorização expressa.</li>
               </ul>
             </section>
@@ -154,18 +154,18 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">8. Propriedade Intelectual</h2>
               <p>
-                Os documentos produzidos pelos agentes de IA LexFlow a partir dos briefings fornecidos pelo Usuário são de
+                Os documentos produzidos pelos agentes de IA PennaJus a partir dos briefings fornecidos pelo Usuário são de
                 <strong className="text-white"> propriedade do Usuário</strong>, desde que devidamente pagos e aprovados pelo advogado responsável na Plataforma.
               </p>
               <p className="mt-3">
-                A marca, logotipo, interface, código-fonte e demais elementos da Plataforma são de propriedade exclusiva do LexFlow, 
+                A marca, logotipo, interface, código-fonte e demais elementos da Plataforma são de propriedade exclusiva do PennaJus, 
                 protegidos pela legislação de propriedade intelectual vigente.
               </p>
             </section>
 
             <section>
               <h2 className="text-xl font-bold text-white mb-3">9. Limitação de Responsabilidade</h2>
-              <p>O LexFlow não se responsabiliza por:</p>
+              <p>O PennaJus não se responsabiliza por:</p>
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
                 <li>Erros jurídicos decorrentes do uso de minutas sem a devida revisão profissional;</li>
                 <li>Decisões judiciais ou administrativas baseadas em documentos produzidos pelos agentes de IA da Plataforma e utilizados sem a devida revisão e aprovação do advogado responsável;</li>
@@ -177,7 +177,7 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">10. Conformidade com a OAB e CNJ</h2>
               <p>
-                O LexFlow foi desenvolvido em conformidade com:
+                O PennaJus foi desenvolvido em conformidade com:
               </p>
               <ul className="mt-3 space-y-2 list-disc list-inside text-gray-400">
                 <li><strong className="text-white">Resolução CNJ nº 615/2025</strong> — uso ético e responsável de IA no âmbito jurídico;</li>
@@ -190,7 +190,7 @@ export default function TermosDeUso() {
             <section>
               <h2 className="text-xl font-bold text-white mb-3">11. Alterações dos Termos</h2>
               <p>
-                O LexFlow reserva-se o direito de alterar estes Termos a qualquer momento, 
+                O PennaJus reserva-se o direito de alterar estes Termos a qualquer momento, 
                 mediante notificação prévia de 15 dias ao Usuário por e-mail cadastrado. 
                 O uso continuado da Plataforma após a vigência das alterações implica aceitação tácita dos novos termos.
               </p>
@@ -211,9 +211,9 @@ export default function TermosDeUso() {
                 Para dúvidas, solicitações ou notificações relacionadas a estes Termos, entre em contato:
               </p>
               <div className="mt-3 p-4 rounded-lg" style={{ backgroundColor: '#0a192f' }}>
-                <p><strong className="text-white">LexFlow</strong></p>
-                <p className="text-gray-400 text-sm mt-1">E-mail: contato@lexflow.com.br</p>
-                <p className="text-gray-400 text-sm">Site: ayuilfql.gensparkclaw.com</p>
+                <p><strong className="text-white">PennaJus</strong></p>
+                <p className="text-gray-400 text-sm mt-1">E-mail: contato@pennajus.com.br</p>
+                <p className="text-gray-400 text-sm">Site: pennajus.com.br</p>
               </div>
             </section>
 
@@ -221,7 +221,7 @@ export default function TermosDeUso() {
 
           {/* Rodapé do documento */}
           <div className="mt-12 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-xs">© 2026 LexFlow · Todos os direitos reservados</p>
+            <p className="text-gray-500 text-xs">© 2026 PennaJus · Todos os direitos reservados</p>
             <Link href="/privacidade" className="text-sm" style={{ color: '#d4af37' }}>
               Ver Política de Privacidade →
             </Link>

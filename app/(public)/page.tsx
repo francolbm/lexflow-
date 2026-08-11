@@ -70,8 +70,8 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center gap-2">
-              <Image src="/logo-eagle.png" alt="LexFlow" width={36} height={36} className="rounded" />
-              <span className="text-xl font-bold text-white tracking-wide">LexFlow</span>
+              <Image src="/logo-eagle.png" alt="PennaJus" width={36} height={36} className="rounded" />
+              <span className="text-xl font-bold text-white tracking-wide">PennaJus</span>
             </div>
 
             {/* Nav desktop */}
@@ -140,12 +140,10 @@ export default function LandingPage() {
           {/* Logo águia em destaque */}
           <div className="flex justify-center mb-8">
             <Image
-              src="/logo-eagle.png"
-              alt="LexFlow"
-              width={160}
-              height={160}
-              className="rounded-2xl shadow-2xl"
-              style={{ border: '2px solid #d4af3740' }}
+              src="/logo-lockup.png"
+              alt="PennaJus"
+              width={220}
+              height={234}
             />
           </div>
           <Badge className="mb-6 text-sm px-4 py-1.5" style={{ backgroundColor: '#d4af3720', color: '#d4af37', border: '1px solid #d4af3740' }}>
@@ -156,7 +154,7 @@ export default function LandingPage() {
             <span style={{ color: '#d4af37' }}>agentes de IA especializados</span>
           </h1>
           <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-            O LexFlow utiliza agentes de IA jurídica de última geração para produzir contratos, petições,
+            O PennaJus utiliza agentes de IA jurídica de última geração para produzir contratos, petições,
             pareceres e muito mais — com rastreabilidade total, revisão pelo advogado do escritório e qualidade garantida.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -181,7 +179,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl font-bold text-white mb-4">
-              Por que escolher o <span style={{ color: '#d4af37' }}>LexFlow</span>?
+              Por que escolher o <span style={{ color: '#d4af37' }}>PennaJus</span>?
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto">
               Desenvolvido especialmente para advogados que valorizam tempo, qualidade e controle.
@@ -346,12 +344,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2">
-              <Image src="/logo-eagle.png" alt="LexFlow" width={28} height={28} className="rounded" />
-              <span className="text-white font-bold">LexFlow</span>
+              <Image src="/logo-eagle.png" alt="PennaJus" width={28} height={28} className="rounded" />
+              <span className="text-white font-bold">PennaJus</span>
             </div>
             <div className="text-center">
               <p className="text-gray-500 text-xs max-w-2xl leading-relaxed">
-                <strong className="text-gray-400">Aviso Jurídico:</strong> O LexFlow é uma plataforma de produção documental jurídica por agentes de IA especializados.
+                <strong className="text-gray-400">Aviso Jurídico:</strong> O PennaJus é uma plataforma de produção documental jurídica por agentes de IA especializados.
                 Todos os documentos gerados pelos agentes de IA atuam como suporte técnico-documental e devem ser revisados e aprovados pelo advogado do escritório contratante.
                 A validação jurídica final, análise de mérito e responsabilidade profissional são
                 de competência exclusiva do advogado contratante, nos termos do Estatuto da OAB e da Resolução CNJ nº 615/2025.
@@ -360,11 +358,11 @@ export default function LandingPage() {
             <div className="flex gap-4 text-gray-500 text-xs">
               <Link href="/termos" className="hover:text-gray-300 transition-colors">Termos de Uso</Link>
               <Link href="/privacidade" className="hover:text-gray-300 transition-colors">Privacidade</Link>
-              <a href="mailto:contato@lexflow.com.br" className="hover:text-gray-300 transition-colors">Contato</a>
+              <a href="mailto:contato@pennajus.com.br" className="hover:text-gray-300 transition-colors">Contato</a>
             </div>
           </div>
           <div className="mt-8 pt-6 border-t border-white/5 text-center text-gray-600 text-xs">
-            © {new Date().getFullYear()} LexFlow. Todos os direitos reservados.
+            © {new Date().getFullYear()} PennaJus. Todos os direitos reservados.
           </div>
         </div>
       </footer>
