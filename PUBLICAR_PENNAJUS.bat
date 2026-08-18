@@ -36,7 +36,7 @@ echo Mudancas a enviar:
 git status --short
 echo.
 
-git commit -m "feat: rebranding LexFlow -> PennaJus (nome, logo aguia+pena, dominios) + modo simulado de IA (AI_MOCK)"
+git commit -m "feat: menu mobile no painel admin (hamburguer + gaveta AdminSidebar)"
 if errorlevel 1 (
   echo [AVISO] Nada para commitar ou falha no commit.
   goto :fim
