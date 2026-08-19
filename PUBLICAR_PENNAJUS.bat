@@ -36,7 +36,7 @@ echo Mudancas a enviar:
 git status --short
 echo.
 
-git commit -m "feat: menu mobile no painel admin (hamburguer + gaveta AdminSidebar)"
+git commit -m "feat: areas de atuacao (enum legal_area de 12 areas + tabela organization_areas + slug oficial no formulario de nova demanda)"
 if errorlevel 1 (
   echo [AVISO] Nada para commitar ou falha no commit.
   goto :fim

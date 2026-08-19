@@ -215,20 +215,45 @@ export const DEMAND_TYPES = [
   'Outro',
 ]
 
-export const AREAS_OF_LAW = [
-  'Cível',
-  'Trabalhista',
-  'Tributário',
-  'Empresarial',
-  'Imobiliário',
-  'Família e Sucessões',
-  'Criminal',
-  'Administrativo',
-  'Ambiental',
-  'Digital/Tecnologia',
-  'Saúde',
-  'Outro',
+// Áreas de atuação — 12 slugs oficiais (enum legal_area no banco).
+// O banco só aceita esses valores; qualquer coisa fora do enum é rejeitada.
+export type LegalArea =
+  | 'criminal'
+  | 'empresarial'
+  | 'civel_contencioso'
+  | 'trabalhista'
+  | 'tributario'
+  | 'familia_sucessoes'
+  | 'consumidor'
+  | 'ambiental'
+  | 'administrativo'
+  | 'digital'
+  | 'previdenciario'
+  | 'imobiliario'
+
+// Rótulo exibido -> slug enviado ao banco. Preserva ordem intencional.
+export const LEGAL_AREAS: { slug: LegalArea; label: string }[] = [
+  { slug: 'criminal',           label: 'Criminal' },
+  { slug: 'empresarial',        label: 'Empresarial' },
+  { slug: 'civel_contencioso',  label: 'Contencioso Cível' },
+  { slug: 'trabalhista',        label: 'Trabalhista' },
+  { slug: 'tributario',         label: 'Tributário' },
+  { slug: 'familia_sucessoes',  label: 'Família e Sucessões' },
+  { slug: 'consumidor',         label: 'Consumidor' },
+  { slug: 'ambiental',          label: 'Ambiental' },
+  { slug: 'administrativo',     label: 'Administrativo' },
+  { slug: 'digital',            label: 'Digital (LGPD, internet)' },
+  { slug: 'previdenciario',     label: 'Previdenciário' },
+  { slug: 'imobiliario',        label: 'Imobiliário' },
 ]
+
+// Retro-compatibilidade temporária: alguns lugares ainda importam AREAS_OF_LAW.
+// Aqui a lista vira a de RÓTULOS extraídos de LEGAL_AREAS.
+export const AREAS_OF_LAW = LEGAL_AREAS.map(a => a.label)
+
+// Mapa rótulo -> slug (usado ao gravar no banco)
+export const AREA_LABEL_TO_SLUG: Record<string, LegalArea> =
+  Object.fromEntries(LEGAL_AREAS.map(a => [a.label, a.slug])) as Record<string, LegalArea>
 
 // Mapeamento de valores frontend (português) para backend (inglês)
 export const DEMAND_TYPE_MAP: Record<string, string> = {

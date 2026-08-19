@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
-import { DEMAND_TYPES, AREAS_OF_LAW, DEMAND_TYPE_MAP, URGENCY_MAP } from '@/lib/types'
+import { DEMAND_TYPES, LEGAL_AREAS, DEMAND_TYPE_MAP, URGENCY_MAP } from '@/lib/types'
 import { Loader2, ChevronRight, ChevronLeft, Upload, X, FileText, CheckCircle } from 'lucide-react'
 
 interface NovaDemandaFormProps {
@@ -257,14 +257,14 @@ export function NovaDemandaForm({ userId, orgId }: NovaDemandaFormProps) {
                     <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-900 border-white/20 text-white shadow-xl" style={{ backgroundColor: '#0d1f38', border: '1px solid rgba(255,255,255,0.15)' }}>
-                    {AREAS_OF_LAW.map(a => (
-                      <SelectItem 
-                        key={a} 
-                        value={a}
+                    {LEGAL_AREAS.map(a => (
+                      <SelectItem
+                        key={a.slug}
+                        value={a.slug}
                         className="text-white hover:bg-white/10 focus:bg-white/10 cursor-pointer py-2.5 px-3"
                         style={{ color: 'white' }}
                       >
-                        {a}
+                        {a.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -295,7 +295,7 @@ export function NovaDemandaForm({ userId, orgId }: NovaDemandaFormProps) {
         <Card className="border-0" style={{ backgroundColor: '#112240' }}>
           <CardHeader>
             <CardTitle className="text-white text-lg">Briefing do Documento</CardTitle>
-            <p className="text-gray-400 text-sm">{formData.demand_type} · {formData.area_of_law}</p>
+            <p className="text-gray-400 text-sm">{formData.demand_type} · {LEGAL_AREAS.find(a => a.slug === formData.area_of_law)?.label || formData.area_of_law}</p>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="space-y-2">
