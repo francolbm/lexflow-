@@ -8,6 +8,85 @@ Gere um documento jurídico completo, formal e tecnicamente correto com base no 
 O texto será revisado por um advogado antes de qualquer entrega ao cliente — produza o melhor rascunho possível,
 mas não inclua avisos sobre ser uma IA nem disclaimers dentro do próprio documento.`
 
+
+/**
+ * Formata o mapa estruturado do Leitor de Processo como um bloco de texto
+ * legível para injetar no prompt. Só inclui seções que têm conteúdo.
+ */
+function formatProcessMapForPrompt(map: any): string {
+  if (!map || typeof map !== 'object') return ''
+  const lines: string[] = []
+
+  const id = map.identificacao
+  if (id && (id.numero || id.tribunal || id.classe || id.valorCausa)) {
+    lines.push('## Identificação do processo')
+    if (id.numero) lines.push(`- Número: ${id.numero}`)
+    if (id.tribunal) lines.push(`- Tribunal: ${id.tribunal}`)
+    if (id.vara) lines.push(`- Vara: ${id.vara}`)
+    if (id.classe) lines.push(`- Classe: ${id.classe}`)
+    if (id.valorCausa) lines.push(`- Valor da causa: ${id.valorCausa}`)
+    if (map.faseAtual) lines.push(`- Fase atual: ${map.faseAtual}`)
+    lines.push('')
+  }
+
+  if (Array.isArray(map.partes) && map.partes.length) {
+    lines.push('## Partes')
+    for (const p of map.partes) {
+      const adv = Array.isArray(p.advogados) && p.advogados.length ? ` (adv: ${p.advogados.join('; ')})` : ''
+      const doc = p.cpfCnpj ? ` [${p.cpfCnpj}]` : ''
+      lines.push(`- ${p.tipo}: ${p.nome}${doc}${adv}`)
+    }
+    lines.push('')
+  }
+
+  if (Array.isArray(map.linhaDoTempo) && map.linhaDoTempo.length) {
+    lines.push('## Linha do tempo')
+    for (const e of map.linhaDoTempo) {
+      const data = e.data ? `${e.data} — ` : ''
+      const pg = e.paginaRef ? ` (p. ${e.paginaRef})` : ''
+      lines.push(`- ${data}${e.tipo}: ${e.resumo}${pg}`)
+    }
+    lines.push('')
+  }
+
+  if (Array.isArray(map.decisoes) && map.decisoes.length) {
+    lines.push('## Decisões')
+    for (const d of map.decisoes) {
+      const data = d.data ? `${d.data} — ` : ''
+      const orgao = d.orgao ? `${d.orgao}: ` : ''
+      lines.push(`- ${data}${orgao}${d.tipo}: ${d.resumo}`)
+      if (d.dispositivo) lines.push(`  Dispositivo: ${d.dispositivo}`)
+    }
+    lines.push('')
+  }
+
+  if (Array.isArray(map.valores) && map.valores.length) {
+    lines.push('## Valores')
+    for (const v of map.valores) lines.push(`- ${v.descricao}: ${v.valor}`)
+    lines.push('')
+  }
+
+  if (Array.isArray(map.teses) && map.teses.length) {
+    lines.push('## Teses das partes')
+    for (const t of map.teses) lines.push(`- (${t.parte}) ${t.tese}`)
+    lines.push('')
+  }
+
+  if (Array.isArray(map.precedentes) && map.precedentes.length) {
+    lines.push('## Precedentes citados')
+    for (const p of map.precedentes) lines.push(`- ${p.referencia}: ${p.resumo}`)
+    lines.push('')
+  }
+
+  if (Array.isArray(map.proximosAtos) && map.proximosAtos.length) {
+    lines.push('## Próximos atos previstos')
+    for (const a of map.proximosAtos) lines.push(`- ${a}`)
+    lines.push('')
+  }
+
+  return lines.join('\n').trim()
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -73,7 +152,21 @@ ${supportFilesContent}
 
 Gere a minuta completa para este documento.`
 
-    const generatedText = await generateWithClaude(SYSTEM_PROMPT, userPrompt)
+    // Se o Leitor de Processo já rodou pra essa demanda, injeta o mapa
+    // estruturado no prompt — a minuta sai muito mais aderente ao caso real.
+    const { data: reading } = await serviceClient
+      .from('process_readings')
+      .select('map_json')
+      .eq('demand_id', demandId)
+      .eq('status', 'ready')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    const processMapBlock = reading?.map_json
+      ? `\n\nMAPA ESTRUTURADO DO PROCESSO (extraído por IA da cópia integral — use como fonte primária de fatos, números e datas):\n${formatProcessMapForPrompt(reading.map_json)}\n`
+      : ''
+
+    const generatedText = await generateWithClaude(SYSTEM_PROMPT, userPrompt + processMapBlock)
 
     const { count } = await serviceClient
       .from('deliveries')
@@ -126,7 +219,7 @@ Gere a minuta completa para este documento.`
       action: 'ai_generate_draft',
       entity: 'deliveries',
       entity_id: delivery.id,
-      new_data: { demand_id: demandId, version_no: versionNo, model: 'claude-sonnet-5' },
+      new_data: { demand_id: demandId, version_no: versionNo, model: 'claude-sonnet-5', used_process_map: !!reading?.map_json },
     })
 
     return NextResponse.json({

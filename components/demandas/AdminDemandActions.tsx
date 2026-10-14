@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { DemandStatus, STATUS_LABELS } from '@/lib/types'
-import { Loader2, Upload, FileText, X, Sparkles } from 'lucide-react'
+import { Loader2, Upload, FileText, X, Sparkles, FileSearch } from 'lucide-react'
 
 interface AdminDemandActionsProps {
   demandId: string
@@ -44,6 +44,14 @@ export function AdminDemandActions({ demandId, currentStatus, operatorId, orgId 
   const [success, setSuccess] = useState('')
   const [aiLoading, setAiLoading] = useState<'generate' | 'adjust' | null>(null)
   const [aiPreview, setAiPreview] = useState<{ versionNo: number; text: string } | null>(null)
+  const [readingLoading, setReadingLoading] = useState(false)
+  const [reading, setReading] = useState<{
+    cached: boolean
+    total_pages?: number
+    total_chars?: number
+    cost_cents?: number
+    map: any
+  } | null>(null)
 
   const nextStatuses = statusTransitions[currentStatus] || []
 
@@ -231,6 +239,43 @@ export function AdminDemandActions({ demandId, currentStatus, operatorId, orgId 
     setAiLoading(null)
   }
 
+  async function handleReadProcess() {
+    setReadingLoading(true)
+    setError('')
+    setReading(null)
+
+    try {
+      const res = await fetch('/api/ai/read-process', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ demandId }),
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data.error || 'Erro ao ler o processo')
+      } else {
+        setReading({
+          cached: data.cached,
+          total_pages: data.total_pages,
+          total_chars: data.total_chars,
+          cost_cents: data.cost_cents,
+          map: data.map,
+        })
+        const costLabel = data.cost_cents != null ? ` (custo estimado: R$ ${(data.cost_cents/100).toFixed(2)})` : ''
+        setSuccess(
+          data.cached
+            ? 'Mapa do processo carregado do cache.'
+            : `Processo lido com sucesso — ${data.total_pages} páginas em ${data.blocks} bloco(s)${costLabel}.`
+        )
+        router.refresh()
+      }
+    } catch (e: any) {
+      setError('Erro ao ler processo: ' + e.message)
+    }
+    setReadingLoading(false)
+  }
+
   async function handleInternalNote() {
     if (!internalNote.trim()) return
     setLoading(true)
@@ -297,6 +342,90 @@ export function AdminDemandActions({ demandId, currentStatus, operatorId, orgId 
             </Button>
           </div>
         )}
+
+        {/* AI: Ler processo */}
+        <div className="space-y-3 pt-2 border-t border-white/10">
+          <Label className="text-gray-300 text-sm font-medium flex items-center gap-1.5">
+            <FileSearch className="h-3.5 w-3.5" style={{ color: '#d4af37' }} />
+            Ler Processo (IA)
+          </Label>
+          <p className="text-gray-500 text-xs leading-relaxed">
+            Extrai partes, linha do tempo, decisões, valores e teses da cópia integral anexada.
+            O mapa fica em cache para reuso e alimenta a geração de rascunho.
+          </p>
+          <Button
+            onClick={handleReadProcess}
+            disabled={readingLoading}
+            variant="outline"
+            className="w-full border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/10 font-semibold"
+          >
+            {readingLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <FileSearch className="h-4 w-4 mr-2" />
+            )}
+            Ler processo com IA
+          </Button>
+
+          {reading && (
+            <div className="rounded-lg p-3 space-y-2" style={{ backgroundColor: '#0a192f' }}>
+              <div className="flex items-center justify-between">
+                <p className="text-gray-500 text-xs uppercase tracking-wide">
+                  Mapa do Processo {reading.cached ? '(cache)' : ''}
+                </p>
+                {reading.cost_cents != null && !reading.cached && (
+                  <p className="text-gray-500 text-xs">
+                    R$ {(reading.cost_cents / 100).toFixed(2)}
+                  </p>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-gray-500">Nº do processo: </span>
+                  <span className="text-gray-300">{reading.map?.identificacao?.numero || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Tribunal: </span>
+                  <span className="text-gray-300">{reading.map?.identificacao?.tribunal || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Fase atual: </span>
+                  <span className="text-gray-300">{reading.map?.faseAtual || '—'}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Páginas: </span>
+                  <span className="text-gray-300">{reading.total_pages ?? '—'}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2 text-xs pt-1 border-t border-white/5">
+                <div>
+                  <span className="text-gray-500">Partes </span>
+                  <span className="text-gray-300 font-semibold">{reading.map?.partes?.length ?? 0}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Eventos </span>
+                  <span className="text-gray-300 font-semibold">{reading.map?.linhaDoTempo?.length ?? 0}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Decisões </span>
+                  <span className="text-gray-300 font-semibold">{reading.map?.decisoes?.length ?? 0}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Teses </span>
+                  <span className="text-gray-300 font-semibold">{reading.map?.teses?.length ?? 0}</span>
+                </div>
+              </div>
+              <details className="pt-2 border-t border-white/5">
+                <summary className="text-gray-500 text-xs cursor-pointer hover:text-gray-400">
+                  ver JSON completo
+                </summary>
+                <pre className="text-gray-400 text-[10px] leading-tight whitespace-pre-wrap max-h-64 overflow-y-auto mt-2">
+                  {JSON.stringify(reading.map, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
+        </div>
 
         {/* AI draft generation */}
         <div className="space-y-3 pt-2 border-t border-white/10">
