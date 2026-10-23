@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, AlertCircle } from 'lucide-react'
+import { PLANS, isPlanCode, formatPlanPrice } from '@/lib/types'
 
 export default async function AssinaturaPage() {
   const supabase = createClient()
@@ -25,28 +26,8 @@ export default async function AssinaturaPage() {
         .single()
     : { data: null }
 
-  const planDetails: Record<string, { name: string; price: string; limit: number; features: string[] }> = {
-    start: {
-      name: 'Start',
-      price: 'R$197/mês',
-      limit: 10,
-      features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo'],
-    },
-    pro: {
-      name: 'Pro',
-      price: 'R$497/mês',
-      limit: 30,
-      features: ['30 demandas/mês', 'Suporte prioritário', 'SLA garantido', 'Notas estratégicas'],
-    },
-    premium: {
-      name: 'Premium',
-      price: 'R$997/mês',
-      limit: 80,
-      features: ['80 demandas/mês', 'Suporte dedicado 24/7', 'Relatórios avançados', 'Múltiplos usuários'],
-    },
-  }
-
-  const currentPlan = subscription ? planDetails[subscription.plan_code] : null
+  const planCode: unknown = subscription?.plan_code
+  const currentPlan = isPlanCode(planCode) ? PLANS[planCode] : null
   const usagePercent = subscription
     ? Math.round((subscription.demands_used / subscription.demands_limit) * 100)
     : 0
@@ -79,7 +60,7 @@ export default async function AssinaturaPage() {
                     <Badge className="bg-green-500/20 text-green-400 border-0">
                       {subscription.status === 'active' ? 'Ativo' : subscription.status}
                     </Badge>
-                    <span className="text-gray-300 font-medium">{currentPlan.price}</span>
+                    <span className="text-gray-300 font-medium">{formatPlanPrice(currentPlan.priceCents)}/mês</span>
                   </div>
                 </div>
               </CardHeader>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { PLANS, isPlanCode, normalizeSubscriptionStatus } from '@/lib/types'
 
 // Mapeia o papel de organização (app_role) para o papel exibido no perfil.
 const PROFILE_ROLE: Record<string, string> = {
@@ -56,16 +57,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Apenas um administrador do escritório pode cadastrar membros.' }, { status: 403 })
     }
 
-    // 2) Gate de plano: só PRO/PREMIUM podem cadastrar membros.
+    // 2) Gate de plano: só planos com escritório (Pro/Premium), com assinatura
+    //    ativa ou em trial, podem cadastrar membros.
     const { data: sub } = await serviceClient
       .from('subscriptions')
       .select('plan_code, status')
       .eq('organization_id', orgId)
       .single()
 
-    if (!sub || sub.status !== 'active' || !['pro', 'premium'].includes(sub.plan_code)) {
+    const planCode: unknown = sub?.plan_code
+    const status = normalizeSubscriptionStatus(sub?.status)
+    const statusOk = status === 'active' || status === 'trialing'
+    if (!isPlanCode(planCode) || !PLANS[planCode].hasOffice || !statusOk) {
       return NextResponse.json(
-        { error: 'O cadastro de membros pelo escritório está disponível apenas nos planos PRO e PREMIUM.' },
+        { error: 'O cadastro de membros está disponível apenas nos planos Pro e Premium com assinatura ativa.' },
         { status: 403 }
       )
     }

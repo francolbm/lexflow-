@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreditCard, CheckCircle } from 'lucide-react'
+import { PLANS, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus, type PlanCode, type SubscriptionStatus } from '@/lib/types'
 
 export default async function PlanosPage() {
   const supabase = createClient()
@@ -17,26 +18,26 @@ export default async function PlanosPage() {
     .order('created_at', { ascending: false })
 
   const subs = subscriptions || []
-  const ativos = subs.filter(s => s.status === 'ativo').length
-  const cancelados = subs.filter(s => s.status === 'cancelado').length
-  const inadimplentes = subs.filter(s => s.status === 'inadimplente').length
+  const statusOf = (s: any) => normalizeSubscriptionStatus(s.status)
+  const ativos = subs.filter(s => statusOf(s) === 'active').length
+  const cancelados = subs.filter(s => statusOf(s) === 'canceled').length
+  const inadimplentes = subs.filter(s => statusOf(s) === 'past_due').length
 
+  // Só assinaturas ativas pagam; 'trialing' fica de fora do MRR
   const mrr = subs
-    .filter(s => s.status === 'ativo')
-    .reduce((acc, s) => {
-      const prices: Record<string, number> = { start: 197, pro: 497, premium: 997 }
-      return acc + (prices[s.plan_code] || 0)
-    }, 0)
+    .filter(s => statusOf(s) === 'active')
+    .reduce((acc, s) => acc + (PLANS[s.plan_code as PlanCode]?.priceCents ?? 0), 0) / 100
 
-  const planColors: Record<string, string> = {
+  const planColors: Record<PlanCode, string> = {
     start: 'bg-gray-500/20 text-gray-300',
     pro: 'bg-yellow-500/20 text-yellow-300',
     premium: 'bg-purple-500/20 text-purple-300',
   }
-  const statusColors: Record<string, string> = {
-    ativo: 'bg-green-500/20 text-green-400',
-    cancelado: 'bg-red-500/20 text-red-400',
-    inadimplente: 'bg-orange-500/20 text-orange-400',
+  const statusColors: Partial<Record<SubscriptionStatus, string>> = {
+    active: 'bg-green-500/20 text-green-400',
+    trialing: 'bg-blue-500/20 text-blue-300',
+    past_due: 'bg-orange-500/20 text-orange-400',
+    canceled: 'bg-red-500/20 text-red-400',
   }
 
   return (
@@ -81,6 +82,7 @@ export default async function PlanosPage() {
             subs.map((sub: any, idx: number) => {
               const org = sub.organizations
               const owner = org?.profiles
+              const status = statusOf(sub)
               return (
                 <div
                   key={sub.id}
@@ -91,11 +93,11 @@ export default async function PlanosPage() {
                     <p className="text-white text-sm font-medium">{org?.name || '—'}</p>
                     <p className="text-gray-500 text-xs">{owner?.email || '—'}</p>
                   </div>
-                  <Badge className={`text-xs border-0 ${planColors[sub.plan_code] || ''}`}>
+                  <Badge className={`text-xs border-0 ${planColors[sub.plan_code as PlanCode] || ''}`}>
                     {sub.plan_code?.toUpperCase() || '—'}
                   </Badge>
-                  <Badge className={`text-xs border-0 ${statusColors[sub.status] || ''}`}>
-                    {sub.status}
+                  <Badge className={`text-xs border-0 ${(status && statusColors[status]) || ''}`}>
+                    {status ? SUBSCRIPTION_STATUS_LABELS[status] : sub.status}
                   </Badge>
                   <div className="text-sm text-center">
                     <span className="text-white">{sub.demands_used}</span>
@@ -107,7 +109,7 @@ export default async function PlanosPage() {
                       : '—'}
                   </div>
                   <div>
-                    {sub.status === 'ativo' && (
+                    {status === 'active' && (
                       <CheckCircle className="h-4 w-4 text-green-400" />
                     )}
                   </div>

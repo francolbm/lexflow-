@@ -210,6 +210,36 @@ export function formatPlanPrice(priceCents: number): string {
   return (priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
+// Status de subscriptions.status — mesmos nomes do Stripe, pro webhook gravar direto.
+export type SubscriptionStatus =
+  | 'active' | 'trialing' | 'past_due' | 'canceled'
+  | 'unpaid' | 'incomplete' | 'incomplete_expired' | 'paused'
+
+export const SUBSCRIPTION_STATUS_LABELS: Record<SubscriptionStatus, string> = {
+  active: 'Ativa',
+  trialing: 'Em teste',
+  past_due: 'Inadimplente',
+  canceled: 'Cancelada',
+  unpaid: 'Não paga',
+  incomplete: 'Incompleta',
+  incomplete_expired: 'Expirada',
+  paused: 'Pausada',
+}
+
+// Valores antigos em português (DATABASE.md v1) -> nome Stripe.
+// Remover quando a migration de status normalizar o banco.
+const LEGACY_SUBSCRIPTION_STATUS: Record<string, SubscriptionStatus> = {
+  ativo: 'active',
+  cancelado: 'canceled',
+  inadimplente: 'past_due',
+}
+
+export function normalizeSubscriptionStatus(value: unknown): SubscriptionStatus | null {
+  if (typeof value !== 'string') return null
+  if (value in SUBSCRIPTION_STATUS_LABELS) return value as SubscriptionStatus
+  return LEGACY_SUBSCRIPTION_STATUS[value] ?? null
+}
+
 export interface Subscription {
   id: string
   organization_id: string

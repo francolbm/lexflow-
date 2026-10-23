@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Building2, Users, Settings } from 'lucide-react'
+import { SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus, type PlanCode, type SubscriptionStatus } from '@/lib/types'
 
 export default async function EscritoriosPage() {
   const supabase = createClient()
@@ -26,16 +27,17 @@ export default async function EscritoriosPage() {
     .select('*')
     .in('organization_id', allOrgs.map(o => o.id))
 
-  const planColors: Record<string, string> = {
+  // Record<PlanCode, ...>: se um plano novo entrar em PLANS, o TypeScript obriga a dar cor a ele
+  const planColors: Record<PlanCode, string> = {
     start: 'bg-gray-500/20 text-gray-300',
     pro: 'bg-yellow-500/20 text-yellow-300',
     premium: 'bg-purple-500/20 text-purple-300',
-    enterprise: 'bg-blue-500/20 text-blue-300',
   }
-  const statusColors: Record<string, string> = {
-    ativo: 'bg-green-500/20 text-green-400',
-    cancelado: 'bg-red-500/20 text-red-400',
-    inadimplente: 'bg-orange-500/20 text-orange-400',
+  const statusColors: Partial<Record<SubscriptionStatus, string>> = {
+    active: 'bg-green-500/20 text-green-400',
+    trialing: 'bg-blue-500/20 text-blue-300',
+    past_due: 'bg-orange-500/20 text-orange-400',
+    canceled: 'bg-red-500/20 text-red-400',
   }
 
   return (
@@ -57,6 +59,7 @@ export default async function EscritoriosPage() {
           {allOrgs.map((org: any) => {
             const owner = org.profiles
             const sub = org.subscriptions?.[0]
+            const status = normalizeSubscriptionStatus(sub?.status)
             const membersCount = org.organization_members?.[0]?.count ?? 0
             const endereco = enderecos?.find(e => e.organization_id === org.id)
             return (
@@ -73,7 +76,7 @@ export default async function EscritoriosPage() {
                       </div>
                     </div>
                     {sub && (
-                      <Badge className={`text-xs border-0 ${planColors[sub.plan_code] || ''}`}>
+                      <Badge className={`text-xs border-0 ${planColors[sub.plan_code as PlanCode] || ''}`}>
                         {sub.plan_code?.toUpperCase()}
                       </Badge>
                     )}
@@ -120,8 +123,8 @@ export default async function EscritoriosPage() {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Assinatura</span>
-                          <Badge className={`text-xs border-0 ${statusColors[sub.status] || ''}`}>
-                            {sub.status}
+                          <Badge className={`text-xs border-0 ${(status && statusColors[status]) || ''}`}>
+                            {status ? SUBSCRIPTION_STATUS_LABELS[status] : sub.status}
                           </Badge>
                         </div>
                         {/* Barra de uso */}
