@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
+import { PLANS, isPlanCode } from '@/lib/types'
 
 export async function POST(request: Request) {
   try {
-    const { email, password, fullName, oabNumber, planType = 'free', cnpj, razaoSocial, cep, logradouro, numero, complemento, bairro, cidade, estado } = await request.json()
+    const { email, password, fullName, oabNumber, planType: rawPlanType = 'start', cnpj, razaoSocial, cep, logradouro, numero, complemento, bairro, cidade, estado } = await request.json()
 
     if (!email || !password || !fullName) {
       return NextResponse.json(
@@ -12,6 +13,17 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // 'free' foi extinto na v4; enquanto a tela de cadastro não for atualizada,
+    // ele é tratado como Start (o plano solo equivalente).
+    const planType = rawPlanType === 'free' ? 'start' : rawPlanType
+    if (!isPlanCode(planType)) {
+      return NextResponse.json(
+        { error: 'Plano inválido. Escolha Start, Pro ou Premium.' },
+        { status: 400 }
+      )
+    }
+    const plan = PLANS[planType]
 
     if (password.length < 6) {
       return NextResponse.json(
@@ -100,8 +112,8 @@ export async function POST(request: Request) {
       // Don't fail - org might already exist
     }
 
-    // Determine role based on plan
-    const isAdmin = ['pro', 'premium'].includes(planType)
+    // Planos com escritório (Pro/Premium) criam gestor; Start é advogado solo
+    const isAdmin = plan.hasOffice
     const userRole = isAdmin ? 'admin' : 'advogado'
 
     // Create profile
@@ -117,8 +129,8 @@ export async function POST(request: Request) {
     // Add user to organization if org was created
     if (orgData?.id) {
       // Papéis válidos do enum app_role: admin | lawyer | assistant | client.
-      // Dono de escritório PRO/PREMIUM entra como gestor (admin); no plano free
-      // solo o titular é o próprio advogado (lawyer, pode abrir e aprovar).
+      // Dono de escritório PRO/PREMIUM entra como gestor (admin); no plano Start
+      // (solo) o titular é o próprio advogado (lawyer, pode abrir e aprovar).
       await supabase.from('organization_members').insert({
         organization_id: orgData.id,
         user_id: userId,
@@ -126,17 +138,17 @@ export async function POST(request: Request) {
         status: 'active'
       })
 
-      // Cria subscription para TODOS os planos (inclusive free), garantindo
+      // Cria subscription para TODOS os planos, garantindo
       // fonte de verdade do plano por organização.
       await supabase.from('subscriptions').upsert({
         organization_id: orgData.id,
         plan_code: planType,
         status: 'active',
         demands_used: 0,
-        demands_limit: planType === 'premium' ? 999 : planType === 'pro' ? 100 : 10,
+        demands_limit: plan.demandsLimit,
       })
 
-      // Create subscription record for pro/premium
+      // Endereço/CNPJ só para planos com escritório (Pro/Premium)
       if (isAdmin) {
         // Save endereco data if provided
         if (cnpj || logradouro) {

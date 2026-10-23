@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
+import { PLANS, PLAN_CODES, formatPlanPrice, type PlanCode } from '@/lib/types'
 
 export default function CadastroPage() {
   const router = useRouter()
@@ -18,7 +19,7 @@ export default function CadastroPage() {
     password: '',
     oabNumber: '',
     acceptedTerms: false,
-    planType: 'free',
+    planType: 'start' as PlanCode,
     cnpj: '',
     razaoSocial: '',
     cep: '',
@@ -132,8 +133,8 @@ export default function CadastroPage() {
       return
     }
     
-    // Validate CNPJ for PRO/PREMIUM plans
-    if (['pro', 'premium'].includes(formData.planType)) {
+    // CNPJ obrigatório para planos com escritório (Pro/Premium)
+    if (PLANS[formData.planType].hasOffice) {
       if (!formData.cnpj) {
         setError('CNPJ é obrigatório para planos PRO ou PREMIUM')
         return
@@ -201,7 +202,7 @@ export default function CadastroPage() {
 
         <Card className="border border-white/10 shadow-2xl" style={{ backgroundColor: '#112240' }}>
           <CardHeader className="text-center pb-2">
-            <CardTitle className="text-white text-2xl">Criar conta gratuita</CardTitle>
+            <CardTitle className="text-white text-2xl">Criar conta</CardTitle>
             <CardDescription className="text-gray-400">
               Comece a usar o PennaJus hoje mesmo
             </CardDescription>
@@ -275,36 +276,34 @@ export default function CadastroPage() {
               <div className="space-y-2">
                 <Label className="text-gray-300 text-sm">
                   Selecione seu plano{' '}
-                  <span className="text-gray-500 text-xs">(criar escritório só em PRO ou PREMIUM)</span>
+                  <span className="text-gray-500 text-xs">(Start é advogado solo; Pro e Premium criam escritório)</span>
                 </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { value: 'free', label: 'Grátis', desc: 'Advogado individual', hasOffice: false },
-                    { value: 'starter', label: 'Starter', desc: 'Para começar', hasOffice: false },
-                    { value: 'pro', label: 'PRO', desc: 'Criar escritório', hasOffice: true },
-                    { value: 'premium', label: 'PREMIUM', desc: 'Volume máximo', hasOffice: true },
-                  ].map(plan => (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {PLAN_CODES.map(code => PLANS[code]).map(plan => (
                     <button
-                      key={plan.value}
+                      key={plan.code}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, planType: plan.value }))}
+                      onClick={() => setFormData(prev => ({ ...prev, planType: plan.code }))}
                       className={`p-3 rounded-lg border text-left transition-all ${
-                        formData.planType === plan.value
+                        formData.planType === plan.code
                           ? 'border-yellow-500/50 bg-yellow-500/10'
                           : 'border-white/20 bg-white/5 hover:border-white/40'
                       }`}
                     >
                       <div className={`text-sm font-medium ${
-                        formData.planType === plan.value ? 'text-yellow-300' : 'text-white'
+                        formData.planType === plan.code ? 'text-yellow-300' : 'text-white'
                       }`}>
-                        {plan.label}
+                        {plan.name}
                       </div>
                       <div className="text-xs text-gray-400 mt-0.5">
-                        {plan.desc}
+                        {formatPlanPrice(plan.priceCents)}/mês
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {plan.demandsLimit} demandas/mês
                       </div>
                       {plan.hasOffice && (
                         <div className="text-xs mt-1" style={{ color: '#d4af37' }}>
-                          📁 Criar escritório
+                          📁 Escritório
                         </div>
                       )}
                     </button>
@@ -312,8 +311,8 @@ export default function CadastroPage() {
                 </div>
               </div>
 
-              {/* CNPJ Section - Only for PRO/PREMIUM */}
-              {['pro', 'premium'].includes(formData.planType) && (
+              {/* CNPJ e endereço - só para planos com escritório */}
+              {PLANS[formData.planType].hasOffice && (
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="cnpj" className="text-gray-300 text-sm">

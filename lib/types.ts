@@ -158,9 +158,62 @@ export interface BriefingField {
   placeholder?: string
 }
 
+// Planos oficiais PennaJus v4 (subscriptions.plan_code). Sem plano free:
+// o teste será trial do Pro via Stripe.
+export type PlanCode = 'start' | 'pro' | 'premium'
+
+export interface PlanInfo {
+  code: PlanCode
+  name: string
+  priceCents: number      // mensalidade em centavos de BRL (bate com o Price no Stripe)
+  demandsLimit: number    // demandas por mês
+  hasOffice: boolean      // true = escritório com gestor (admin) e membros; false = advogado solo
+  features: string[]
+}
+
+// Fonte única dos planos — todo lugar que precisa de nome, preço ou limite lê daqui.
+export const PLANS: Record<PlanCode, PlanInfo> = {
+  start: {
+    code: 'start',
+    name: 'Start',
+    priceCents: 19700,
+    demandsLimit: 10,
+    hasOffice: false,
+    features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo'],
+  },
+  pro: {
+    code: 'pro',
+    name: 'Pro',
+    priceCents: 49700,
+    demandsLimit: 30,
+    hasOffice: true,
+    features: ['30 demandas/mês', 'Suporte prioritário', 'SLA garantido', 'Notas estratégicas'],
+  },
+  premium: {
+    code: 'premium',
+    name: 'Premium',
+    priceCents: 99700,
+    demandsLimit: 80,
+    hasOffice: true,
+    features: ['80 demandas/mês', 'Suporte dedicado 24/7', 'Relatórios avançados', 'Múltiplos usuários'],
+  },
+}
+
+export const PLAN_CODES = Object.keys(PLANS) as PlanCode[]
+
+export function isPlanCode(value: unknown): value is PlanCode {
+  return typeof value === 'string' && value in PLANS
+}
+
+// Ex.: 19700 -> "R$ 197,00"
+export function formatPlanPrice(priceCents: number): string {
+  return (priceCents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
 export interface Subscription {
   id: string
   organization_id: string
+  // string (e não PlanCode) até a migration converter linhas antigas como 'free'
   plan_code: string
   status: string
   demands_used: number
