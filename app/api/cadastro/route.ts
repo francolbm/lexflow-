@@ -14,8 +14,8 @@ export async function POST(request: Request) {
       )
     }
 
-    // 'free' foi extinto na v4; enquanto a tela de cadastro não for atualizada,
-    // ele é tratado como Start (o plano solo equivalente).
+    // 'free' foi extinto na v4; aceito como Start só por compatibilidade com
+    // páginas de cadastro antigas abertas no navegador. Remover depois.
     const planType = rawPlanType === 'free' ? 'start' : rawPlanType
     if (!isPlanCode(planType)) {
       return NextResponse.json(
@@ -96,7 +96,18 @@ export async function POST(request: Request) {
     // Build full address
     const fullAddress = logradouro ? `${logradouro}${numero ? ', ' + numero : ''}${complemento ? ', ' + complemento : ''}` : null
 
-    // Create organization
+    // Se qualquer passo falhar daqui pra frente, desfaz tudo: sem conta pela metade.
+    let orgId: string | null = null
+    const rollback = async (step: string, err: { message: string }) => {
+      console.error(`Signup ${step} error:`, err)
+      if (orgId) await supabase.from('organizations').delete().eq('id', orgId) // cascade: membros, assinatura, endereço
+      await supabase.auth.admin.deleteUser(userId)
+      return NextResponse.json(
+        { error: 'Não foi possível concluir o cadastro. Tente novamente.' },
+        { status: 500 }
+      )
+    }
+
     const { data: orgData, error: orgError } = await supabase
       .from('organizations')
       .insert({
@@ -106,67 +117,63 @@ export async function POST(request: Request) {
       })
       .select()
       .single()
+    if (orgError || !orgData) return rollback('organization', orgError ?? { message: 'sem retorno' })
+    orgId = orgData.id
 
-    if (orgError) {
-      console.error('Organization creation error:', orgError)
-      // Don't fail - org might already exist
-    }
-
-    // Planos com escritório (Pro/Premium) criam gestor; Start é advogado solo
+    // Planos com escritório (Pro/Premium): titular é gestor do escritório; Start é advogado solo
     const isAdmin = plan.hasOffice
-    const userRole = isAdmin ? 'admin' : 'advogado'
 
-    // Create profile
-    await supabase.from('profiles').upsert({
+    // profiles.role 'admin'/'operador' = equipe PennaJus (painel da plataforma).
+    // Nunca vem do cadastro: todo cliente é 'advogado'.
+    const { error: profileError } = await supabase.from('profiles').upsert({
       id: userId,
       full_name: fullName,
       email: email,
-      role: userRole,
+      role: 'advogado',
       oab_number: oabNumber || null,
       accepted_terms_at: new Date().toISOString()
     })
+    if (profileError) return rollback('profile', profileError)
 
-    // Add user to organization if org was created
-    if (orgData?.id) {
-      // Papéis válidos do enum app_role: admin | lawyer | assistant | client.
-      // Dono de escritório PRO/PREMIUM entra como gestor (admin); no plano Start
-      // (solo) o titular é o próprio advogado (lawyer, pode abrir e aprovar).
-      await supabase.from('organization_members').insert({
+    // O vínculo do titular como 'admin' já é criado pelo trigger
+    // bootstrap_owner_membership ao inserir o escritório.
+
+    // Subscription para todos os planos: fonte de verdade do plano por organização.
+    const { error: subError } = await supabase.from('subscriptions').insert({
+      organization_id: orgData.id,
+      plan_code: planType,
+      status: 'active',
+      demands_used: 0,
+      demands_limit: plan.demandsLimit,
+    })
+    if (subError) return rollback('subscription', subError)
+
+    // Endereço/CNPJ só para planos com escritório (Pro/Premium)
+    if (isAdmin && (cnpj || logradouro)) {
+      const { error: enderecoError } = await supabase.from('endereco').upsert({
         organization_id: orgData.id,
-        user_id: userId,
-        role: isAdmin ? 'admin' : 'lawyer',
-        status: 'active'
-      })
+        cnpj: cnpj || null,
+        razao_social: razaoSocial || null,
+        cep: cep || null,
+        logradouro: logradouro || null,
+        numero: numero || null,
+        complemento: complemento || null,
+        bairro: bairro || null,
+        cidade: cidade || null,
+        estado: estado || null,
+        full_address: fullAddress
+      }, { onConflict: 'organization_id' })
+      if (enderecoError) return rollback('endereco', enderecoError)
+    }
 
-      // Cria subscription para TODOS os planos, garantindo
-      // fonte de verdade do plano por organização.
-      await supabase.from('subscriptions').upsert({
-        organization_id: orgData.id,
-        plan_code: planType,
-        status: 'active',
-        demands_used: 0,
-        demands_limit: plan.demandsLimit,
-      })
-
-      // Endereço/CNPJ só para planos com escritório (Pro/Premium)
-      if (isAdmin) {
-        // Save endereco data if provided
-        if (cnpj || logradouro) {
-          await supabase.from('endereco').upsert({
-            organization_id: orgData.id,
-            cnpj: cnpj || null,
-            razao_social: razaoSocial || null,
-            cep: cep || null,
-            logradouro: logradouro || null,
-            numero: numero || null,
-            complemento: complemento || null,
-            bairro: bairro || null,
-            cidade: cidade || null,
-            estado: estado || null,
-            full_address: fullAddress
-          }, { onConflict: 'organization_id' })
-        }
-      }
+    // Start (solo): titular vira 'lawyer' para poder finalizar as próprias demandas.
+    // Fica por último: depois disso o trigger ensure_org_has_lawyer impediria o rollback.
+    if (!isAdmin) {
+      const { error: memberError } = await supabase.from('organization_members')
+        .update({ role: 'lawyer' })
+        .eq('organization_id', orgData.id)
+        .eq('user_id', userId)
+      if (memberError) return rollback('member', memberError)
     }
 
     return NextResponse.json({
