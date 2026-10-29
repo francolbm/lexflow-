@@ -14,14 +14,23 @@ export function getStripe(): Stripe {
   return client
 }
 
-// Price ID do Stripe para cada plano. Teste e produção diferem só nas envs.
-export function getStripePriceId(plan: PlanCode): string {
-  const ids: Record<PlanCode, string | undefined> = {
+// Price IDs do Stripe por plano. Teste e produção diferem só nas envs.
+function priceIds(): Record<PlanCode, string | undefined> {
+  return {
     start: process.env.STRIPE_PRICE_START,
     pro: process.env.STRIPE_PRICE_PRO,
     premium: process.env.STRIPE_PRICE_PREMIUM,
   }
-  const id = ids[plan]
+}
+
+export function getStripePriceId(plan: PlanCode): string {
+  const id = priceIds()[plan]
   if (!id) throw new Error(`Price ID do plano ${plan} não configurado`)
   return id
+}
+
+// Inverso: Price ID vindo do Stripe -> plano (null se não for nenhum dos nossos)
+export function getPlanByPriceId(priceId: string): PlanCode | null {
+  const entry = Object.entries(priceIds()).find(([, id]) => id === priceId)
+  return (entry?.[0] as PlanCode | undefined) ?? null
 }
