@@ -136,7 +136,10 @@ export function NovaDemandaForm({ userId, orgId }: NovaDemandaFormProps) {
       .single()
 
     if (demandError) {
-      setError('Erro ao criar demanda: ' + demandError.message)
+      // 42501 = barrado pela RLS (ex.: assinatura venceu com o formulário aberto)
+      setError(demandError.code === '42501'
+        ? 'Não foi possível abrir a solicitação: a assinatura do escritório não está ativa. Veja em Assinatura.'
+        : 'Erro ao criar demanda: ' + demandError.message)
       setLoading(false)
       return
     }

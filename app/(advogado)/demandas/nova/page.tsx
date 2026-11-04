@@ -1,6 +1,10 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/layout/Header'
+import { Card, CardContent } from '@/components/ui/card'
+import { buttonVariants } from '@/components/ui/button'
 import { NovaDemandaForm } from '@/components/demandas/NovaDemandaForm'
 
 export default async function NovaDemandaPage() {
@@ -15,6 +19,10 @@ export default async function NovaDemandaPage() {
   ])
 
   const orgId = membership?.organization_id || null
+  // Mesma função que a RLS usa no insert: a tela e o banco nunca discordam
+  const { data: canCreate } = orgId
+    ? await supabase.rpc('org_has_active_subscription', { org: orgId })
+    : { data: false }
 
   return (
     <>
@@ -24,7 +32,20 @@ export default async function NovaDemandaPage() {
           <h2 className="text-xl font-bold text-white">Nova Solicitação</h2>
           <p className="text-gray-400 text-sm mt-1">Preencha os dados para solicitar a produção de um documento jurídico.</p>
         </div>
-        <NovaDemandaForm userId={user.id} orgId={orgId} />
+        {orgId && !canCreate ? (
+          <Card className="border-0" style={{ backgroundColor: '#112240' }}>
+            <CardContent className="py-12 text-center">
+              <AlertCircle className="h-10 w-10 mx-auto mb-3 text-yellow-400" />
+              <p className="text-white font-medium">Assinatura inativa</p>
+              <p className="text-gray-400 text-sm mt-1">Para abrir novas solicitações, ative ou regularize a assinatura do escritório.</p>
+              <Link href="/assinatura" className={buttonVariants({ className: 'gold-btn mt-6 font-semibold' })}>
+                Ver assinatura
+              </Link>
+            </CardContent>
+          </Card>
+        ) : (
+          <NovaDemandaForm userId={user.id} orgId={orgId} />
+        )}
       </div>
     </>
   )
