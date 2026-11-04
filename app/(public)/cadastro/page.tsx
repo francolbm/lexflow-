@@ -181,7 +181,7 @@ export default function CadastroPage() {
       // Redirect to login after successful signup
       setError('')
       setLoading(false)
-      router.push('/login?registered=true')
+      router.push(result.pendingPayment ? '/login?registered=true&ativar=1' : '/login?registered=true')
     } catch (err) {
       setError('Erro de conexão. Tente novamente.')
     }

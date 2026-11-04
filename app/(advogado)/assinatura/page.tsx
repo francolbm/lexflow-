@@ -100,6 +100,9 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Situação da cobrança */}
+                {status === 'incomplete' && (
+                  <p className="text-yellow-300 text-sm">Seu cadastro está pronto! Falta só ativar a assinatura para começar a abrir solicitações.</p>
+                )}
                 {status === 'trialing' && subscription.current_period_end && (
                   <p className="text-blue-300 text-sm">Período de teste até {fmtDate(subscription.current_period_end)}. A primeira cobrança acontece nessa data.</p>
                 )}

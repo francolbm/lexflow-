@@ -30,6 +30,15 @@ export default async function DashboardPage() {
 
   const orgId = membership?.organization_id
 
+  // Cadastro pendente de pagamento: o titular vai direto ativar a assinatura
+  if (orgId) {
+    const [{ data: sub }, { data: org }] = await Promise.all([
+      supabase.from('subscriptions').select('status').eq('organization_id', orgId).maybeSingle(),
+      supabase.from('organizations').select('owner_user_id').eq('id', orgId).single(),
+    ])
+    if (sub?.status === 'incomplete' && org?.owner_user_id === user.id) redirect('/assinatura')
+  }
+
   // Fetch stats
   let activeCount = 0
   let reviewCount = 0

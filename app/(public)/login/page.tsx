@@ -22,7 +22,9 @@ function LoginForm() {
 
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
-      setSuccessMessage('Conta criada com sucesso! Faça login para continuar.')
+      setSuccessMessage(searchParams.get('ativar') === '1'
+        ? 'Conta criada! Faça login para ativar sua assinatura.'
+        : 'Conta criada com sucesso! Faça login para continuar.')
     }
   }, [searchParams])
 

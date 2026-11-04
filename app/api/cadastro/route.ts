@@ -138,11 +138,15 @@ export async function POST(request: Request) {
     // O vínculo do titular como 'admin' já é criado pelo trigger
     // bootstrap_owner_membership ao inserir o escritório.
 
+    // BILLING_REQUIRED=1: a assinatura nasce 'incomplete' e só ativa depois do Checkout
+    // (o webhook muda para active/trialing). Desligado: ativa direto, como antes.
+    const billingRequired = process.env.BILLING_REQUIRED === '1'
+
     // Subscription para todos os planos: fonte de verdade do plano por organização.
     const { error: subError } = await supabase.from('subscriptions').insert({
       organization_id: orgData.id,
       plan_code: planType,
-      status: 'active',
+      status: billingRequired ? 'incomplete' : 'active',
       demands_used: 0,
       demands_limit: plan.demandsLimit,
     })
@@ -180,6 +184,7 @@ export async function POST(request: Request) {
       success: true,
       userId: userId,
       isAdmin: isAdmin,
+      pendingPayment: billingRequired,
       message: isAdmin ? 'Conta de administrador criada com sucesso' : 'Conta criada com sucesso'
     })
 
