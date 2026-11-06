@@ -100,6 +100,8 @@ async function syncSubscription(supabase: ServiceClient, subscriptionId: string,
     return
   }
 
+  // O Portal (API atual) agenda o cancelamento com cancel_at, não com cancel_at_period_end
+  const endsAt = sub.cancel_at ?? item.current_period_end
   const { error, count } = await supabase.from('subscriptions').update({
     plan_code: plan,
     status,
@@ -107,9 +109,9 @@ async function syncSubscription(supabase: ServiceClient, subscriptionId: string,
     stripe_customer_id: customerId,
     stripe_subscription_id: sub.id,
     stripe_price_id: priceId,
-    cancel_at_period_end: sub.cancel_at_period_end,
-    current_period_end: item.current_period_end
-      ? new Date(item.current_period_end * 1000).toISOString()
+    cancel_at_period_end: sub.cancel_at_period_end || sub.cancel_at != null,
+    current_period_end: endsAt
+      ? new Date(endsAt * 1000).toISOString()
       : null,
   }, { count: 'exact' }).eq('organization_id', orgId)
   if (error) throw new Error(error.message)
