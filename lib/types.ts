@@ -168,8 +168,12 @@ export interface PlanInfo {
   priceCents: number      // mensalidade em centavos de BRL (bate com o Price no Stripe)
   demandsLimit: number    // demandas por mês
   hasOffice: boolean      // true = escritório com gestor (admin) e membros; false = advogado solo
-  features: string[]
+  features: string[]      // só os recursos próprios; os do plano incluído vêm de `includes`
+  includes?: PlanCode     // plano anterior cujos recursos este também tem ("Tudo do Start")
 }
+
+// Recurso de roadmap: termina com este sufixo e é exibido apagado, com relógio
+export const ROADMAP_SUFFIX = '(em desenvolvimento)'
 
 // Fonte única dos planos — todo lugar que precisa de nome, preço ou limite lê daqui.
 export const PLANS: Record<PlanCode, PlanInfo> = {
@@ -179,7 +183,12 @@ export const PLANS: Record<PlanCode, PlanInfo> = {
     priceCents: 19700,
     demandsLimit: 10,
     hasOffice: false,
-    features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo'],
+    features: [
+      '10 demandas/mês incluídas',
+      'Todos os tipos de documentos',
+      'Dashboard do escritório',
+      'Suporte por e-mail',
+    ],
   },
   pro: {
     code: 'pro',
@@ -187,7 +196,11 @@ export const PLANS: Record<PlanCode, PlanInfo> = {
     priceCents: 49700,
     demandsLimit: 30,
     hasOffice: true,
-    features: ['30 demandas/mês', 'Suporte prioritário', 'SLA garantido', 'Notas estratégicas'],
+    includes: 'start',
+    features: [
+      '30 demandas/mês incluídas',
+      'Múltiplos usuários (membros do escritório)',
+    ],
   },
   premium: {
     code: 'premium',
@@ -195,8 +208,25 @@ export const PLANS: Record<PlanCode, PlanInfo> = {
     priceCents: 99700,
     demandsLimit: 80,
     hasOffice: true,
-    features: ['80 demandas/mês', 'Suporte dedicado 24/7', 'Relatórios avançados', 'Múltiplos usuários'],
+    includes: 'pro',
+    features: [
+      '80 demandas/mês incluídas',
+      `Suporte 24/7 ${ROADMAP_SUFFIX}`,
+      `Relatórios avançados ${ROADMAP_SUFFIX}`,
+    ],
   },
+}
+
+export interface PlanFeature {
+  label: string
+  roadmap: boolean        // true = ainda não disponível (exibir como promessa de roadmap)
+}
+
+// Lista exibida ao cliente: "Tudo do <plano incluído>" + recursos próprios
+export function planFeatureList(code: PlanCode): PlanFeature[] {
+  const { includes, features } = PLANS[code]
+  const labels = includes ? [`Tudo do ${PLANS[includes].name}`, ...features] : features
+  return labels.map((label) => ({ label, roadmap: label.endsWith(ROADMAP_SUFFIX) }))
 }
 
 export const PLAN_CODES = Object.keys(PLANS) as PlanCode[]

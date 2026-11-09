@@ -4,9 +4,10 @@ import { Header } from '@/components/layout/Header'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
-import { CheckCircle, AlertCircle, Info } from 'lucide-react'
+import { AlertCircle, Info } from 'lucide-react'
 import { PLANS, isPlanCode, formatPlanPrice, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus } from '@/lib/types'
 import { BillingButton } from '@/components/assinatura/BillingButton'
+import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
 
 const SUPPORT_MAILTO = 'mailto:suporte@pennajus.com'
 
@@ -138,14 +139,7 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
                 {/* Features */}
                 <div className="pt-4 border-t border-white/10">
                   <p className="text-gray-400 text-sm font-medium mb-3">Recursos inclusos:</p>
-                  <ul className="space-y-2">
-                    {currentPlan.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                        <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                  <PlanFeatureList code={currentPlan.code} className="space-y-2" />
                 </div>
               </CardContent>
             </Card>

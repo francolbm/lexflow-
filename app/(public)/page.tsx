@@ -6,8 +6,9 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Shield, BarChart3, CheckCircle, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Zap, Shield, BarChart3, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { PLANS, PLAN_CODES, type PlanCode } from '@/lib/types'
+import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
 
 // Nome, preço e recursos vêm de PLANS (fonte única); aqui só o texto de vitrine
 const PLAN_COPY: Record<PlanCode, { desc: string; highlighted: boolean }> = {
@@ -20,7 +21,6 @@ const plans = PLAN_CODES.map((code) => ({
   code,
   name: PLANS[code].name,
   price: `R$${PLANS[code].priceCents / 100}`,
-  features: PLANS[code].features,
   ...PLAN_COPY[code],
 }))
 
@@ -289,14 +289,7 @@ export default function LandingPage() {
                       <p className={`text-sm mt-2 ${plan.highlighted ? 'text-gray-400' : 'text-gray-500'}`}>{plan.desc}</p>
                     </CardHeader>
                     <CardContent>
-                      <ul className="space-y-3 mb-8">
-                        {plan.features.map((f) => (
-                          <li key={f} className="flex items-center gap-2 text-gray-300 text-sm">
-                            <CheckCircle className="h-4 w-4 flex-shrink-0" style={{ color: '#d4af37' }} />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
+                      <PlanFeatureList code={plan.code} className="space-y-3 mb-8" />
                       <Link href={`/cadastro?plano=${plan.code}`}>
                         <Button className="w-full gold-btn font-semibold">Começar agora</Button>
                       </Link>
