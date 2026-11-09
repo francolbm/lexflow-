@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { AdminSidebar } from '@/components/layout/AdminSidebar'
-import { AdminMobileNav } from '@/components/layout/AdminMobileNav'
+import { AdminShell } from '@/components/layout/AdminShell'
+import { getAvatarUrl } from '@/lib/avatar'
 
 export default async function AdminLayout({
   children,
@@ -26,21 +26,8 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#060f1e' }}>
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0 lg:w-64">
-        <div className="flex flex-col w-64 border-r border-white/10">
-          <AdminSidebar profile={profile} />
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AdminMobileNav profile={profile} />
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <AdminShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile.avatar_url)}>
+      {children}
+    </AdminShell>
   )
 }

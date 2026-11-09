@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Scale, LayoutDashboard, FileText, PlusCircle, CreditCard, LogOut, X } from 'lucide-react'
+import { Scale, LayoutDashboard, FileText, PlusCircle, CreditCard, UserRound, LogOut, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Profile } from '@/lib/types'
+import { initialsOf } from '@/lib/avatar'
+import { useUserAvatar } from './UserAvatarContext'
 
 interface SidebarProps {
   profile: Profile | null
@@ -18,6 +20,7 @@ const navItems = [
   { href: '/demandas', label: 'Minhas Demandas', icon: FileText },
   { href: '/demandas/nova', label: 'Nova Solicitação', icon: PlusCircle },
   { href: '/assinatura', label: 'Assinatura', icon: CreditCard },
+  { href: '/perfil', label: 'Meu perfil', icon: UserRound },
 ]
 
 export function Sidebar({ profile, onClose }: SidebarProps) {
@@ -28,9 +31,8 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
     window.location.href = '/login'
   }
 
-  const initials = profile?.full_name
-    ? profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-    : 'JF'
+  const avatarUrl = useUserAvatar()
+  const initials = initialsOf(profile?.full_name)
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: '#0a192f' }}>
@@ -76,6 +78,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
       <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-9 w-9">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
             <AvatarFallback className="text-sm font-semibold" style={{ backgroundColor: '#d4af3720', color: '#d4af37' }}>
               {initials}
             </AvatarFallback>

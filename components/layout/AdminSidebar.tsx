@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, BarChart3, LogOut, X, Building2, CreditCard, TrendingUp, FileText } from 'lucide-react'
+import { LayoutDashboard, Users, BarChart3, LogOut, X, Building2, CreditCard, TrendingUp, FileText, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Profile } from '@/lib/types'
+import { initialsOf } from '@/lib/avatar'
+import { useUserAvatar } from './UserAvatarContext'
 
 interface AdminSidebarProps {
   profile: Profile | null
@@ -37,6 +39,12 @@ const navGroups = [
       { href: '/admin/auditoria', label: 'Auditoria & Logs', icon: FileText },
     ]
   },
+  {
+    label: 'Conta',
+    items: [
+      { href: '/perfil', label: 'Meu perfil', icon: UserRound },
+    ]
+  },
 ]
 
 export function AdminSidebar({ profile, onClose }: AdminSidebarProps) {
@@ -47,9 +55,8 @@ export function AdminSidebar({ profile, onClose }: AdminSidebarProps) {
     window.location.href = '/login'
   }
 
-  const initials = profile?.full_name
-    ? profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
-    : 'AD'
+  const avatarUrl = useUserAvatar()
+  const initials = profile?.full_name ? initialsOf(profile.full_name) : 'AD'
 
   return (
     <div className="flex flex-col h-full" style={{ backgroundColor: '#060f1e' }}>
@@ -109,6 +116,7 @@ export function AdminSidebar({ profile, onClose }: AdminSidebarProps) {
       <div className="border-t border-white/10 p-4">
         <div className="flex items-center gap-3 mb-3">
           <Avatar className="h-9 w-9">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
             <AvatarFallback className="text-sm font-semibold" style={{ backgroundColor: '#d4af3720', color: '#d4af37' }}>
               {initials}
             </AvatarFallback>

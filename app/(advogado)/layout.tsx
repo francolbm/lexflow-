@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/Sidebar'
+import { AdvogadoShell } from '@/components/layout/AdvogadoShell'
+import { getAvatarUrl } from '@/lib/avatar'
 
 export default async function AdvogadoLayout({
   children,
@@ -26,20 +27,8 @@ export default async function AdvogadoLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#0a192f' }}>
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0 lg:w-64">
-        <div className="flex flex-col w-64 border-r border-white/10">
-          <Sidebar profile={profile} />
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-      </div>
-    </div>
+    <AdvogadoShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile?.avatar_url)}>
+      {children}
+    </AdvogadoShell>
   )
 }
