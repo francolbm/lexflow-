@@ -7,32 +7,29 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Zap, Shield, BarChart3, CheckCircle, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PLANS, PLAN_CODES, type PlanCode } from '@/lib/types'
 
-const plans = [
-  {
-    name: 'Teste grátis', price: 'R$0', desc: 'Experimente sem compromisso', highlighted: false, cta: 'Experimentar grátis',
-    features: ['1 demanda', 'Verificação de OAB', 'Todos os tipos de documentos', 'Sem cartão de crédito'],
-  },
-  {
-    name: 'Start', price: 'R$197', desc: 'Ideal para advogados autônomos', highlighted: false, cta: 'Começar agora',
-    features: ['10 demandas/mês', 'Todos os tipos de documentos', 'Suporte por e-mail', 'Dashboard completo', 'Histórico de versões'],
-  },
-  {
-    name: 'Pro', price: 'R$497', desc: 'Para escritórios em crescimento', highlighted: true, cta: 'Começar agora',
-    features: ['30 demandas/mês', 'Todos os tipos de documentos', 'Suporte prioritário', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido'],
-  },
-  {
-    name: 'Premium', price: 'R$997', desc: 'Para grandes escritórios', highlighted: false, cta: 'Começar agora',
-    features: ['80 demandas/mês', 'Todos os tipos de documentos', 'Suporte dedicado 24/7', 'Dashboard completo', 'Histórico de versões', 'Notas estratégicas', 'SLA garantido', 'Relatórios avançados', 'Múltiplos usuários'],
-  },
-]
+// Nome, preço e recursos vêm de PLANS (fonte única); aqui só o texto de vitrine
+const PLAN_COPY: Record<PlanCode, { desc: string; highlighted: boolean }> = {
+  start: { desc: 'Ideal para advogados autônomos', highlighted: false },
+  pro: { desc: 'Para escritórios em crescimento', highlighted: true },
+  premium: { desc: 'Para grandes escritórios', highlighted: false },
+}
+
+const plans = PLAN_CODES.map((code) => ({
+  code,
+  name: PLANS[code].name,
+  price: `R$${PLANS[code].priceCents / 100}`,
+  features: PLANS[code].features,
+  ...PLAN_COPY[code],
+}))
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Carrossel de planos (só no mobile; no desktop vira grade)
   const trackRef = useRef<HTMLDivElement>(null)
-  const [activePlan, setActivePlan] = useState(2) // começa no "Pro" (Mais Popular)
+  const [activePlan, setActivePlan] = useState(1) // começa no "Pro" (Mais Popular)
 
   const centerOn = (i: number, smooth = true) => {
     const track = trackRef.current
@@ -58,7 +55,7 @@ export default function LandingPage() {
   }
 
   useEffect(() => {
-    const t = setTimeout(() => centerOn(2, false), 60)
+    const t = setTimeout(() => centerOn(1, false), 60)
     return () => clearTimeout(t)
   }, [])
 
@@ -84,7 +81,7 @@ export default function LandingPage() {
                 </Button>
               </Link>
               <Link href="/cadastro">
-                <Button className="gold-btn text-sm">Começar grátis</Button>
+                <Button className="gold-btn text-sm">Começar agora</Button>
               </Link>
             </nav>
 
@@ -125,7 +122,7 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/cadastro" onClick={() => setMobileMenuOpen(false)}>
                   <Button className="w-full gold-btn text-sm font-semibold">
-                    Começar grátis
+                    Começar agora
                   </Button>
                 </Link>
               </div>
@@ -242,7 +239,7 @@ export default function LandingPage() {
               Escolha o plano ideal para o volume de demandas do seu escritório.
             </p>
           </div>
-          <div className="relative max-w-6xl mx-auto">
+          <div className="relative max-w-5xl mx-auto">
             {/* Seta anterior (só no carrossel mobile) */}
             <button
               onClick={() => centerOn(Math.max(0, activePlan - 1))}
@@ -258,7 +255,7 @@ export default function LandingPage() {
             <div
               ref={trackRef}
               onScroll={handlePlansScroll}
-              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-10 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:overflow-visible md:snap-none md:px-0 md:py-8"
+              className="flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth py-10 px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:snap-none md:px-0 md:py-8"
             >
               {plans.map((plan, i) => (
                 <div
@@ -300,8 +297,8 @@ export default function LandingPage() {
                           </li>
                         ))}
                       </ul>
-                      <Link href="/cadastro">
-                        <Button className="w-full gold-btn font-semibold">{plan.cta || 'Começar agora'}</Button>
+                      <Link href={`/cadastro?plano=${plan.code}`}>
+                        <Button className="w-full gold-btn font-semibold">Começar agora</Button>
                       </Link>
                     </CardContent>
                   </Card>

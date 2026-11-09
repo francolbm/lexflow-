@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Scale, Eye, EyeOff, Loader2 } from 'lucide-react'
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
-import { PLANS, PLAN_CODES, formatPlanPrice, type PlanCode } from '@/lib/types'
+import { PLANS, PLAN_CODES, formatPlanPrice, isPlanCode, type PlanCode } from '@/lib/types'
 
 export default function CadastroPage() {
   const router = useRouter()
@@ -33,6 +33,12 @@ export default function CadastroPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // /cadastro?plano=pro (links da home) já abre com o plano escolhido; valor inválido é ignorado
+  useEffect(() => {
+    const plano = new URLSearchParams(window.location.search).get('plano')
+    if (isPlanCode(plano)) setFormData(prev => ({ ...prev, planType: plano }))
+  }, [])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     const target = e.target as HTMLInputElement | HTMLSelectElement
