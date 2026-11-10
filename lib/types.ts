@@ -281,8 +281,11 @@ export interface Subscription {
   // string (e não PlanCode) até a migration converter linhas antigas como 'free'
   plan_code: string
   status: string
+  // Contador cru: só vale se usage_period_start for o período atual. Para a tela use getDemandUsage (lib/quota).
   demands_used: number
   demands_limit: number
+  usage_period_start?: string | null
+  current_period_start?: string | null
   created_at?: string
 }
 

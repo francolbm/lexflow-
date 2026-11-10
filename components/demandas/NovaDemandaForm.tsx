@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { DEMAND_TYPES, LEGAL_AREAS, DEMAND_TYPE_MAP, URGENCY_MAP } from '@/lib/types'
+import { QUOTA_ERROR } from '@/lib/quota'
 import { Loader2, ChevronRight, ChevronLeft, Upload, X, FileText, CheckCircle } from 'lucide-react'
 
 interface NovaDemandaFormProps {
@@ -139,7 +140,9 @@ export function NovaDemandaForm({ userId, orgId }: NovaDemandaFormProps) {
       // 42501 = barrado pela RLS (ex.: assinatura venceu com o formulário aberto)
       setError(demandError.code === '42501'
         ? 'Não foi possível abrir a solicitação: a assinatura do escritório não está ativa. Veja em Assinatura.'
-        : 'Erro ao criar demanda: ' + demandError.message)
+        : demandError.code === QUOTA_ERROR
+          ? 'Limite do plano atingido: o escritório já usou todas as demandas deste período. Veja em Assinatura como fazer upgrade.'
+          : 'Erro ao criar demanda: ' + demandError.message)
       setLoading(false)
       return
     }

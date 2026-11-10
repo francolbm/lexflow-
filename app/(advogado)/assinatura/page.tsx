@@ -8,6 +8,7 @@ import { AlertCircle, Info } from 'lucide-react'
 import { PLANS, isPlanCode, formatPlanPrice, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus } from '@/lib/types'
 import { BillingButton } from '@/components/assinatura/BillingButton'
 import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
+import { getDemandUsage, fmtResetDate } from '@/lib/quota'
 
 const SUPPORT_MAILTO = 'mailto:suporte@pennajus.com'
 
@@ -50,9 +51,9 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
   // Assinatura viva no Stripe -> gerenciar pelo Portal; senão -> assinar pelo Checkout
   const hasStripeSubscription = !!subscription?.stripe_subscription_id
     && status !== 'canceled' && status !== 'incomplete_expired'
-  const usagePercent = subscription
-    ? Math.round((subscription.demands_used / subscription.demands_limit) * 100)
-    : 0
+  // Uso do período vigente (zera sozinho na virada do ciclo); o demands_used cru pode ser de um período antigo
+  const usage = membership ? await getDemandUsage(supabase, membership.organization_id) : null
+  const usagePercent = usage?.percent ?? 0
 
   return (
     <>
@@ -121,7 +122,7 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-gray-400">Demandas utilizadas</span>
                     <span className="text-white font-medium">
-                      {subscription.demands_used} / {subscription.demands_limit}
+                      {usage?.used ?? 0} / {usage?.quota ?? subscription.demands_limit}
                     </span>
                   </div>
                   <div className="h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1e3a5f' }}>
@@ -133,7 +134,9 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
                       }}
                     />
                   </div>
-                  <p className="text-gray-500 text-xs mt-1">{usagePercent}% utilizado no período</p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    {usagePercent}% utilizado no período{usage && ` · renova em ${fmtResetDate(usage.resetsAt)}`}
+                  </p>
                 </div>
 
                 {/* Features */}

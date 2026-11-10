@@ -113,6 +113,10 @@ async function syncSubscription(supabase: ServiceClient, subscriptionId: string,
     current_period_end: endsAt
       ? new Date(endsAt * 1000).toISOString()
       : null,
+    // Início do ciclo de cobrança: é quando a cota de demandas renova (quota_period_start)
+    current_period_start: item.current_period_start
+      ? new Date(item.current_period_start * 1000).toISOString()
+      : null,
   }, { count: 'exact' }).eq('organization_id', orgId)
   if (error) throw new Error(error.message)
   if (!count) throw new Error(`escritório ${orgId} sem linha em subscriptions`)
