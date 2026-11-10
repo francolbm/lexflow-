@@ -19,7 +19,9 @@ export async function POST(request: NextRequest) {
   if (sub.stripe_subscription_id && ['active', 'trialing', 'past_due', 'unpaid'].includes(sub.status)) {
     return NextResponse.json({ error: 'Assinatura já existe. Use "Gerenciar assinatura".' }, { status: 409 })
   }
-  const planCode: unknown = sub.plan_code
+  // Plano pedido pelo botão (upgrade de cortesia na /assinatura) ou, sem pedido, o do cadastro
+  const body = await request.json().catch(() => ({}))
+  const planCode: unknown = body?.plan ?? sub.plan_code
   if (!isPlanCode(planCode)) {
     return NextResponse.json({ error: 'Plano inválido.' }, { status: 409 })
   }

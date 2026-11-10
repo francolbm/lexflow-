@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { AlertCircle, Info } from 'lucide-react'
-import { PLANS, isPlanCode, formatPlanPrice, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus } from '@/lib/types'
+import { PLANS, PLAN_CODES, isPlanCode, formatPlanPrice, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus, type PlanCode } from '@/lib/types'
 import { BillingButton } from '@/components/assinatura/BillingButton'
 import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
 import { getDemandUsage, fmtResetDate } from '@/lib/quota'
@@ -51,6 +51,14 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
   // Assinatura viva no Stripe -> gerenciar pelo Portal; senão -> assinar pelo Checkout
   const hasStripeSubscription = !!subscription?.stripe_subscription_id
     && status !== 'canceled' && status !== 'incomplete_expired'
+  // Ativa sem assinatura no Stripe = cortesia (concedida pela equipe, sem cobrança)
+  const isComp = !hasStripeSubscription && (status === 'active' || status === 'trialing' || status === 'past_due')
+  // Planos acima do atual, na ordem de PLANS (start < pro < premium); o Premium não tem upgrade
+  const higherPlans = currentPlan ? PLAN_CODES.slice(PLAN_CODES.indexOf(currentPlan.code) + 1).map((c) => PLANS[c]) : []
+  // Trial do Pro: só na primeira assinatura (mesma regra do /api/stripe/checkout); sem cliente Stripe = nunca assinou
+  const checkoutNote = (code: PlanCode) => code === 'pro' && !subscription?.stripe_customer_id
+    ? 'O Pro inclui 14 dias de teste na primeira assinatura. O cartão é pedido agora e cobrado só depois do teste.'
+    : 'Pagamento mensal no cartão, processado pelo Stripe.'
   // Uso do período vigente (zera sozinho na virada do ciclo); o demands_used cru pode ser de um período antigo
   const usage = membership ? await getDemandUsage(supabase, membership.organization_id) : null
   const usagePercent = usage?.percent ?? 0
@@ -154,19 +162,40 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
                   Somente o titular do escritório gerencia a assinatura.
                 </p>
               ) : hasStripeSubscription ? (
-                <>
+                // Paga pelo Stripe: Portal para tudo; o upgrade abre o Portal direto na troca de plano
+                <div data-cta="stripe" className="space-y-3">
                   <p className="text-gray-500 text-sm">Troque de plano, atualize o cartão, veja faturas ou cancele.</p>
-                  <BillingButton action="portal" label="Gerenciar assinatura" />
-                </>
+                  <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                    <BillingButton action="portal" label="Gerenciar assinatura" />
+                    {higherPlans.map((p) => (
+                      <BillingButton key={p.code} action="portal" upgrade secondary label={`Fazer upgrade para o ${p.name}`} />
+                    ))}
+                  </div>
+                </div>
+              ) : isComp ? (
+                // Cortesia (ativa sem Stripe): não há o que gerenciar no Portal; upgrade = nova assinatura paga
+                <div data-cta="cortesia" className="space-y-3">
+                  <p className="text-gray-400 text-sm">Plano cortesia, sem cobrança.</p>
+                  {higherPlans.length > 0 && (
+                    <>
+                      <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                        {higherPlans.map((p, i) => (
+                          <BillingButton
+                            key={p.code} action="checkout" plan={p.code} secondary={i > 0}
+                            label={currentPlan.code === 'start' && i === 0 ? `Assinar o plano ${p.name}` : `Fazer upgrade para o ${p.name}`}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-gray-500 text-xs">{checkoutNote(higherPlans[0].code)}</p>
+                    </>
+                  )}
+                </div>
               ) : (
-                <>
-                  <p className="text-gray-500 text-sm">
-                    {currentPlan.code === 'pro'
-                      ? 'O Pro inclui 14 dias de teste na primeira assinatura. O cartão é pedido agora e cobrado só depois do teste.'
-                      : 'Pagamento mensal no cartão, processado pelo Stripe.'}
-                  </p>
+                // Sem plano ativo: assina o plano escolhido no cadastro
+                <div data-cta="assinar" className="space-y-3">
+                  <p className="text-gray-500 text-sm">{checkoutNote(currentPlan.code)}</p>
                   <BillingButton action="checkout" label={`Assinar o plano ${currentPlan.name}`} />
-                </>
+                </div>
               )}
               <p className="text-gray-500 text-xs">
                 Dúvidas? <a href={SUPPORT_MAILTO} className="underline" style={{ color: '#d4af37' }}>Falar com suporte</a>
