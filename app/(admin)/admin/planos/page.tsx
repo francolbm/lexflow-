@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CreditCard, CheckCircle } from 'lucide-react'
+import { getDemandUsage } from '@/lib/quota'
 import { PLANS, SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus, type PlanCode, type SubscriptionStatus } from '@/lib/types'
 
 export default async function PlanosPage() {
@@ -18,6 +19,9 @@ export default async function PlanosPage() {
     .order('created_at', { ascending: false })
 
   const subs = subscriptions || []
+  // Uso do período atual (demands_used cru fica velho quando o período vira)
+  const usage = new Map(await Promise.all(subs.map(async (s: any) =>
+    [s.organization_id, await getDemandUsage(supabase, s.organization_id)] as const)))
   const statusOf = (s: any) => normalizeSubscriptionStatus(s.status)
   const ativos = subs.filter(s => statusOf(s) === 'active').length
   const cancelados = subs.filter(s => statusOf(s) === 'canceled').length
@@ -100,8 +104,8 @@ export default async function PlanosPage() {
                     {status ? SUBSCRIPTION_STATUS_LABELS[status] : sub.status}
                   </Badge>
                   <div className="text-sm text-center">
-                    <span className="text-white">{sub.demands_used}</span>
-                    <span className="text-gray-500"> / {sub.demands_limit}</span>
+                    <span className="text-white">{usage.get(sub.organization_id)?.used ?? '—'}</span>
+                    <span className="text-gray-500"> / {usage.get(sub.organization_id)?.quota ?? sub.demands_limit}</span>
                   </div>
                   <div className="text-gray-400 text-xs">
                     {sub.current_period_end

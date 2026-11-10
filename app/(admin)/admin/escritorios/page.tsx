@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Building2, Users, Settings } from 'lucide-react'
+import { getDemandUsage, fmtResetDate } from '@/lib/quota'
 import { SUBSCRIPTION_STATUS_LABELS, normalizeSubscriptionStatus, type PlanCode, type SubscriptionStatus } from '@/lib/types'
 
 export default async function EscritoriosPage() {
@@ -20,6 +21,9 @@ export default async function EscritoriosPage() {
     .order('created_at', { ascending: false })
 
   const allOrgs = orgs || []
+  // Uso do período atual (demands_used cru fica velho quando o período vira)
+  const usage = new Map(await Promise.all(allOrgs.map(async (o: any) =>
+    [o.id, await getDemandUsage(supabase, o.id)] as const)))
 
   // Fetch endereco data
   const { data: enderecos } = await supabase
@@ -58,10 +62,12 @@ export default async function EscritoriosPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {allOrgs.map((org: any) => {
             const owner = org.profiles
-            const sub = org.subscriptions?.[0]
+            // subscriptions é 1:1 com organizations: o embed vem como objeto, não lista
+            const sub = Array.isArray(org.subscriptions) ? org.subscriptions[0] : org.subscriptions
             const status = normalizeSubscriptionStatus(sub?.status)
             const membersCount = org.organization_members?.[0]?.count ?? 0
             const endereco = enderecos?.find(e => e.organization_id === org.id)
+            const u = usage.get(org.id)
             return (
               <Card key={org.id} className="border-0" style={{ backgroundColor: '#0d1f38' }}>
                 <CardContent className="pt-5 pb-5">
@@ -115,11 +121,11 @@ export default async function EscritoriosPage() {
                         <Users className="h-3 w-3" /> {membersCount}
                       </span>
                     </div>
-                    {sub && (
+                    {sub && u && (
                       <>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Demandas usadas</span>
-                          <span className="text-gray-300">{sub.demands_used} / {sub.demands_limit}</span>
+                          <span className="text-gray-300">{u.used} / {u.quota}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Assinatura</span>
@@ -133,13 +139,13 @@ export default async function EscritoriosPage() {
                             <div
                               className="h-1.5 rounded-full"
                               style={{
-                                width: `${Math.min(100, Math.round((sub.demands_used / sub.demands_limit) * 100))}%`,
-                                backgroundColor: sub.demands_used / sub.demands_limit > 0.8 ? '#ef4444' : '#d4af37'
+                                width: `${Math.min(100, u.percent)}%`,
+                                backgroundColor: u.warn ? '#ef4444' : '#d4af37'
                               }}
                             />
                           </div>
                           <p className="text-gray-600 text-xs mt-1">
-                            {Math.round((sub.demands_used / sub.demands_limit) * 100)}% do plano utilizado
+                            {u.percent}% do plano utilizado · renova em {fmtResetDate(u.resetsAt)}
                           </p>
                         </div>
                       </>
