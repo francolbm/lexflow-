@@ -7,7 +7,7 @@ import { PLANS, isPlanCode, normalizeSubscriptionStatus } from '@/lib/types'
 const PROFILE_ROLE: Record<string, string> = {
   lawyer: 'advogado',
   assistant: 'assistente',
-  admin: 'admin',
+  admin: 'advogado', // admin do ESCRITÓRIO é cliente; profiles.role 'admin' = equipe PennaJus
 }
 
 function gerarSenhaTemporaria(): string {
