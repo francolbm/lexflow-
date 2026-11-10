@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header'
 import { PerfilSections } from '@/components/perfil/PerfilSections'
 import { getAvatarUrl } from '@/lib/avatar'
 import { isPlatformStaff, type OrgRole } from '@/lib/types'
+import { loadOfficeData } from '@/lib/office'
 
 export default async function PerfilPage() {
   const supabase = createClient()
@@ -27,6 +28,9 @@ export default async function PerfilPage() {
     ? await supabase.from('subscriptions').select('stripe_customer_id').eq('organization_id', membership!.organization_id).maybeSingle()
     : { data: null }
 
+  // Seções do escritório: pelo VÍNCULO com o escritório, independente de ser equipe PennaJus
+  const office = await loadOfficeData(user.id)
+
   return (
     <>
       {/* Na área do advogado o Header traz o menu mobile; no admin quem faz isso é o AdminMobileNav do layout */}
@@ -49,6 +53,7 @@ export default async function PerfilPage() {
             ? `Equipe PennaJus (${profile.role === 'admin' ? 'Admin' : 'Operador'})`
             : membership?.role ? ORG_ROLE_LABELS[membership.role as OrgRole] : null}
           billing={isOwner ? { hasStripeCustomer: !!sub?.stripe_customer_id } : null}
+          office={office}
         />
       </div>
     </>
