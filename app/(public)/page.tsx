@@ -6,8 +6,8 @@ import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Shield, BarChart3, ArrowRight, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react'
-import { PLANS, PLAN_CODES, type PlanCode } from '@/lib/types'
+import { Zap, Shield, BarChart3, ArrowRight, Menu, X, ChevronLeft, ChevronRight, Gift } from 'lucide-react'
+import { PLANS, PLAN_CODES, planTrialLabel, type PlanCode } from '@/lib/types'
 import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
 
 // Nome, preço e recursos vêm de PLANS (fonte única); aqui só o texto de vitrine
@@ -289,7 +289,19 @@ export default function LandingPage() {
                       <p className={`text-sm mt-2 ${plan.highlighted ? 'text-gray-400' : 'text-gray-500'}`}>{plan.desc}</p>
                     </CardHeader>
                     <CardContent>
-                      <PlanFeatureList code={plan.code} className="space-y-3 mb-8" />
+                      <PlanFeatureList code={plan.code} className={`space-y-3 ${planTrialLabel(plan.code) ? 'mb-5' : 'mb-8'}`} />
+                      {/* Selo do trial: só para planos com trialDays em PLANS (hoje, só o Pro) */}
+                      {planTrialLabel(plan.code) && (
+                        <div data-trial className="mb-4 flex justify-center">
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold"
+                            style={{ backgroundColor: 'rgba(212,175,55,0.14)', border: '1px solid rgba(212,175,55,0.55)', color: '#e8c55a' }}
+                          >
+                            <Gift className="h-3.5 w-3.5" />
+                            {planTrialLabel(plan.code)}
+                          </span>
+                        </div>
+                      )}
                       <Link href={`/cadastro?plano=${plan.code}`}>
                         <Button className="w-full gold-btn font-semibold">Começar agora</Button>
                       </Link>

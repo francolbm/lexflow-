@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe, getStripePriceId } from '@/lib/stripe'
 import { getOwnerBilling } from '@/lib/billing'
-import { isPlanCode } from '@/lib/types'
+import { PLANS, isPlanCode } from '@/lib/types'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const PRO_TRIAL_DAYS = 14
 
 // Cria a sessão de Checkout para o plano escolhido no cadastro. Trocar de plano
 // depois de assinar é pelo Customer Portal, não por um novo Checkout.
@@ -42,11 +40,11 @@ export async function POST(request: NextRequest) {
     if (error) return NextResponse.json({ error: 'Falha ao preparar pagamento.' }, { status: 500 })
   }
 
-  // Trial só no Pro e só uma vez: cliente que já teve qualquer assinatura não ganha de novo
+  // Trial (PLANS[x].trialDays, hoje só o Pro) e só uma vez: cliente que já teve qualquer assinatura não ganha de novo
   let trialDays: number | undefined
-  if (planCode === 'pro') {
+  if (PLANS[planCode].trialDays) {
     const previous = await stripe.subscriptions.list({ customer: customerId, status: 'all', limit: 1 })
-    if (previous.data.length === 0) trialDays = PRO_TRIAL_DAYS
+    if (previous.data.length === 0) trialDays = PLANS[planCode].trialDays
   }
 
   const origin = new URL(request.url).origin

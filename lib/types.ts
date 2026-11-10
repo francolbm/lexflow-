@@ -175,6 +175,13 @@ export interface PlanInfo {
   hasOffice: boolean      // true = escritório com gestor (admin) e membros; false = advogado solo
   features: string[]      // só os recursos próprios; os do plano incluído vêm de `includes`
   includes?: PlanCode     // plano anterior cujos recursos este também tem ("Tudo do Start")
+  trialDays?: number      // dias grátis na primeira assinatura (Checkout do Stripe); só o Pro tem
+}
+
+// Selo do trial exibido na home e no cadastro (null = plano sem trial)
+export function planTrialLabel(code: PlanCode): string | null {
+  const days = PLANS[code].trialDays
+  return days ? `${days} dias grátis na primeira assinatura` : null
 }
 
 // Recurso de roadmap: termina com este sufixo e é exibido apagado, com relógio
@@ -202,6 +209,7 @@ export const PLANS: Record<PlanCode, PlanInfo> = {
     demandsLimit: 30,
     hasOffice: true,
     includes: 'start',
+    trialDays: 14,
     features: [
       '30 demandas/mês incluídas',
       'Múltiplos usuários (membros do escritório)',

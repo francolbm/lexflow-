@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
-import { PLANS, PLAN_CODES, formatPlanPrice, isPlanCode, type PlanCode } from '@/lib/types'
+import { PLANS, PLAN_CODES, formatPlanPrice, isPlanCode, planTrialLabel, type PlanCode } from '@/lib/types'
 
 export default function CadastroPage() {
   const router = useRouter()
@@ -312,9 +312,19 @@ export default function CadastroPage() {
                           📁 Escritório
                         </div>
                       )}
+                      {plan.trialDays && (
+                        <div className="text-xs mt-1 font-semibold" style={{ color: '#e8c55a' }}>
+                          🎁 {plan.trialDays} dias grátis
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
+                {planTrialLabel(formData.planType) && (
+                  <p data-trial className="text-xs" style={{ color: '#e8c55a' }}>
+                    🎁 O {PLANS[formData.planType].name} tem {planTrialLabel(formData.planType)}.
+                  </p>
+                )}
               </div>
 
               {/* CNPJ e endereço - só para planos com escritório */}
