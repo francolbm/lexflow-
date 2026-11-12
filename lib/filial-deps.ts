@@ -2,6 +2,7 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { getStripe, getStripePriceId } from '@/lib/stripe'
 import { FILIAL_COUPON_ID, FilialHttpError, type FilialDeps } from '@/lib/filial'
+import { DEMANDAS_ENCERRADAS, type CancelDeps } from '@/lib/filial-cancel'
 
 export function createFilialDeps(redirectBase: string): FilialDeps {
   const db = createServiceClient()
@@ -157,6 +158,75 @@ export function createFilialDeps(redirectBase: string): FilialDeps {
     async audit({ orgId, userId, newData }) {
       must(await db.from('audit_logs').insert({
         organization_id: orgId, user_id: userId, action: 'filial_created',
+        entity: 'organizations', entity_id: orgId, new_data: newData,
+      }), 'audit')
+    },
+  }
+}
+
+// ---- Cancelamento de filial (Rota 2) ----
+export function createCancelDeps(): CancelDeps {
+  const db = createServiceClient()
+  const must = <T>(r: { data: T; error: { message: string } | null }, what: string): T => {
+    if (r.error) throw new Error(`${what}: ${r.error.message}`)
+    return r.data
+  }
+
+  return {
+    async getOrganization(id) {
+      return must(await db.from('organizations')
+        .select('id, name, parent_organization_id, status').eq('id', id).maybeSingle(), 'getOrganization')
+    },
+
+    async getOwnerUserId(orgId) {
+      return must(await db.from('organizations').select('owner_user_id').eq('id', orgId).maybeSingle(), 'getOwnerUserId')
+        ?.owner_user_id ?? null
+    },
+
+    async countActiveDemands(orgId) {
+      const { count, error } = await db.from('demands').select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgId)
+        .not('status', 'in', `(${DEMANDAS_ENCERRADAS.join(',')})`)
+      if (error) throw new Error(`countActiveDemands: ${error.message}`)
+      return count ?? 0
+    },
+
+    async getStripeSubscriptionId(orgId) {
+      return must(await db.from('subscriptions').select('stripe_subscription_id').eq('organization_id', orgId).maybeSingle(),
+        'getStripeSubscriptionId')?.stripe_subscription_id ?? null
+    },
+
+    async scheduleStripeCancel(subId) {
+      const stripe = getStripe()
+      const cur = await stripe.subscriptions.retrieve(subId)
+      if (cur.status === 'canceled' || cur.status === 'incomplete_expired') return null
+      const sub = await stripe.subscriptions.update(subId, { cancel_at_period_end: true })
+      const ts = sub.cancel_at ?? sub.items.data[0]?.current_period_end
+      return ts ? new Date(ts * 1000) : null
+    },
+
+    async unscheduleStripeCancel(subId) {
+      await getStripe().subscriptions.update(subId, { cancel_at_period_end: false })
+    },
+
+    async markPendingDeletion(orgId) {
+      const { data, error } = await db.from('organizations')
+        .update({ status: 'pending_deletion', deleted_at: new Date().toISOString() })
+        .eq('id', orgId).neq('status', 'pending_deletion').select('id')
+      if (error) throw new Error(`markPendingDeletion: ${error.message}`)
+      return (data ?? []).length > 0
+    },
+
+    async markSubscriptionCancelling(orgId, endsAt) {
+      must(await db.from('subscriptions').update({
+        cancel_at_period_end: true,
+        ...(endsAt ? { current_period_end: endsAt.toISOString() } : {}),
+      }).eq('organization_id', orgId), 'markSubscriptionCancelling')
+    },
+
+    async audit({ orgId, userId, newData }) {
+      must(await db.from('audit_logs').insert({
+        organization_id: orgId, user_id: userId, action: 'filial_cancel_requested',
         entity: 'organizations', entity_id: orgId, new_data: newData,
       }), 'audit')
     },
