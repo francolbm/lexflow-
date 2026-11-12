@@ -98,11 +98,23 @@ export function createFilialDeps(redirectBase: string): FilialDeps {
       }), 'insertSubscriptionRow')
     },
 
-    async createStripeSubscription({ customerId, metadata, idempotencyKey }) {
+    async createStripeSubscription({ customerId, matrizSubscriptionId, metadata, idempotencyKey }) {
       const priceId = getStripePriceId('premium')
+      const stripe = getStripe()
+      // O Checkout grava o cartão na assinatura, não como padrão do cliente: usa o da assinatura da matriz.
+      const matriz = await stripe.subscriptions.retrieve(matrizSubscriptionId, { expand: ['customer'] })
+      const pmOf = (v: unknown): string | null =>
+        typeof v === 'string' ? v : (v as { id?: string } | null)?.id ?? null
+      const customer = matriz.customer as import('stripe').Stripe.Customer
+      const paymentMethod = pmOf(matriz.default_payment_method)
+        ?? pmOf((customer as { invoice_settings?: { default_payment_method?: unknown } }).invoice_settings?.default_payment_method)
+      if (!paymentMethod) {
+        throw new FilialHttpError(409, 'A matriz não tem um cartão cadastrado para cobrar a nova filial.', 'matriz_sem_cartao')
+      }
       try {
-        const sub = await getStripe().subscriptions.create({
+        const sub = await stripe.subscriptions.create({
           customer: customerId,
+          default_payment_method: paymentMethod,
           items: [{ price: priceId }],
           discounts: [{ coupon: FILIAL_COUPON_ID }],
           payment_behavior: 'error_if_incomplete',

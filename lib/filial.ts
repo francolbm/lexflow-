@@ -86,7 +86,7 @@ export interface FilialDeps {
   insertEndereco(e: Record<string, string | null>): Promise<void>
   insertSubscriptionRow(s: { orgId: string; customerId: string; billingEmail: string; demandsLimit: number }): Promise<void>
   createStripeSubscription(a: {
-    customerId: string; metadata: Record<string, string>; idempotencyKey: string
+    customerId: string; matrizSubscriptionId: string; metadata: Record<string, string>; idempotencyKey: string
   }): Promise<StripeSubResult>
   cancelStripeSubscription(subId: string): Promise<void>
   updateSubscriptionFromStripe(orgId: string, s: StripeSubResult): Promise<void>
@@ -196,6 +196,7 @@ export async function criarFilial(deps: FilialDeps, userId: string, rawBody: unk
     // Stripe por último: é o único passo que gera cobrança.
     const stripeSub = await deps.createStripeSubscription({
       customerId,
+      matrizSubscriptionId: sub.stripe_subscription_id as string,
       metadata: { organization_id: newOrgId, parent_organization_id: matriz.id },
       idempotencyKey: `filial-${newOrgId}`,
     })

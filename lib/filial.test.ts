@@ -142,6 +142,7 @@ describe('criarFilial — sucesso', () => {
     expect(vi.mocked(d.insertEndereco).mock.calls[0][0]).toMatchObject({ cnpj: '11222333000181', estado: 'MT', cep: '78000000' })
     expect(d.createStripeSubscription).toHaveBeenCalledWith({
       customerId: 'cus_1',
+      matrizSubscriptionId: 'sub_m',
       metadata: { organization_id: 'org-filial', parent_organization_id: 'org-matriz' },
       idempotencyKey: 'filial-org-filial',
     })
@@ -231,6 +232,15 @@ describe('criarFilial — rollback', () => {
     expect(r.status).toBe(409)
     expect(d.purgeOrganization).toHaveBeenCalled()
     expect(d.createStripeSubscription).not.toHaveBeenCalled()
+  })
+
+  it('matriz sem cartão (409 matriz_sem_cartao): desfaz tudo e devolve o código', async () => {
+    const d = makeDeps({ createStripeSubscription: vi.fn(async () => { throw new FilialHttpError(409, 'sem cartão', 'matriz_sem_cartao') }) })
+    const r = await criarFilial(d, USER, body())
+    expect(r.status).toBe(409)
+    expect(r.body.error).toBe('matriz_sem_cartao')
+    expect(d.purgeOrganization).toHaveBeenCalled()
+    expect(d.deleteAuthUser).toHaveBeenCalledWith('user-novo')
   })
 
   it('cartão recusado (402) vira 402 e desfaz', async () => {
