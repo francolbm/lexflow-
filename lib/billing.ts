@@ -9,9 +9,13 @@ export async function getOwnerBilling() {
 
   const service = createServiceClient()
   const { data: org } = await service
-    .from('organizations').select('id, name').eq('owner_user_id', user.id).maybeSingle()
+    .from('organizations').select('id, name, parent_organization_id').eq('owner_user_id', user.id).maybeSingle()
   if (!org) {
     return { error: NextResponse.json({ error: 'Só o titular do escritório pode gerenciar a assinatura.' }, { status: 403 }) }
+  }
+  // Filial cobra no mesmo customer Stripe da matriz: o Portal/Checkout dela exporia as assinaturas da matriz.
+  if (org.parent_organization_id) {
+    return { error: NextResponse.json({ error: 'A assinatura desta filial é gerenciada pela matriz.' }, { status: 403 }) }
   }
 
   const { data: sub } = await service
