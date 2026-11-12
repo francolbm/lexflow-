@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { getStripe, getStripePriceId } from '@/lib/stripe'
 import { FILIAL_COUPON_ID, FilialHttpError, type FilialDeps } from '@/lib/filial'
 import { DEMANDAS_ENCERRADAS, type CancelDeps } from '@/lib/filial-cancel'
+import type { ListDeps } from '@/lib/filial-list'
 
 export function createFilialDeps(redirectBase: string): FilialDeps {
   const db = createServiceClient()
@@ -229,6 +230,91 @@ export function createCancelDeps(): CancelDeps {
         organization_id: orgId, user_id: userId, action: 'filial_cancel_requested',
         entity: 'organizations', entity_id: orgId, new_data: newData,
       }), 'audit')
+    },
+  }
+}
+
+// ---- Listagem de filiais (Rota 3) ----
+export function createListDeps(): ListDeps {
+  const db = createServiceClient()
+  const must = <T>(r: { data: T; error: { message: string } | null }, what: string): T => {
+    if (r.error) throw new Error(`${what}: ${r.error.message}`)
+    return r.data
+  }
+
+  return {
+    async listCandidateOrgs(userId) {
+      const owned = must(await db.from('organizations')
+        .select('id, name, parent_organization_id').eq('owner_user_id', userId), 'candidates.owned') ?? []
+      const adminOf = must(await db.from('organization_members')
+        .select('organization_id').eq('user_id', userId).eq('status', 'active').eq('role', 'admin'), 'candidates.admin') ?? []
+      const extraIds = adminOf.map((m) => m.organization_id).filter((id) => !owned.some((o) => o.id === id))
+      const extra = extraIds.length
+        ? must(await db.from('organizations').select('id, name, parent_organization_id').in('id', extraIds), 'candidates.extra') ?? []
+        : []
+      const orgs = [...owned, ...extra]
+      if (orgs.length === 0) return []
+      const subs = must(await db.from('subscriptions').select('organization_id, plan_code')
+        .in('organization_id', orgs.map((o) => o.id)), 'candidates.subs') ?? []
+      return orgs.map((o) => ({ ...o, plan_code: subs.find((s) => s.organization_id === o.id)?.plan_code ?? null }))
+    },
+
+    async listFiliais(matrizId) {
+      return must(await db.from('organizations').select('id, name, status, deleted_at, created_at')
+        .eq('parent_organization_id', matrizId).order('created_at'), 'listFiliais') ?? []
+    },
+
+    async getEnderecos(ids) {
+      return must(await db.from('endereco').select('organization_id, cnpj, cidade, estado').in('organization_id', ids), 'getEnderecos') ?? []
+    },
+
+    async countOpenDemands(ids) {
+      // Contagem exata por filial (head:true): o teto de 1000 linhas do PostgREST falsearia um agrupamento no cliente.
+      const entries = await Promise.all(ids.map(async (id) => {
+        const { count, error } = await db.from('demands').select('id', { count: 'exact', head: true })
+          .eq('organization_id', id).not('status', 'in', `(${DEMANDAS_ENCERRADAS.join(',')})`)
+        if (error) throw new Error(`countOpenDemands: ${error.message}`)
+        return [id, count ?? 0] as const
+      }))
+      return Object.fromEntries(entries)
+    },
+
+    async countActiveLawyers(ids) {
+      const members = must(await db.from('organization_members').select('organization_id, user_id, role')
+        .in('organization_id', ids).eq('status', 'active').in('role', ['lawyer', 'admin']), 'countActiveLawyers.members') ?? []
+      const adminIds = Array.from(new Set(members.filter((m) => m.role === 'admin').map((m) => m.user_id)))
+      const withOab = new Set(adminIds.length
+        ? (must(await db.from('profiles').select('id').in('id', adminIds).not('oab_number', 'is', null), 'countActiveLawyers.oab') ?? []).map((p) => p.id)
+        : [])
+      const out: Record<string, number> = {}
+      for (const m of members) {
+        if (m.role === 'lawyer' || withOab.has(m.user_id)) out[m.organization_id] = (out[m.organization_id] ?? 0) + 1
+      }
+      return out
+    },
+
+    async getSubscriptions(ids) {
+      return must(await db.from('subscriptions')
+        .select('organization_id, status, stripe_subscription_id, cancel_at_period_end, current_period_end')
+        .in('organization_id', ids), 'getSubscriptions') ?? []
+    },
+
+    async getFilialMonthlyCents() {
+      try {
+        const stripe = getStripe()
+        const [price, coupon] = await Promise.all([
+          stripe.prices.retrieve(getStripePriceId('premium')),
+          stripe.coupons.retrieve(FILIAL_COUPON_ID),
+        ])
+        const base = price.unit_amount
+        if (base == null) return null
+        if (coupon.percent_off != null) return Math.round(base * (100 - coupon.percent_off) / 100)
+        if (coupon.amount_off != null) return Math.max(0, base - coupon.amount_off)
+        return base
+      } catch (err) {
+        console.error('filial listar: preço no Stripe indisponível:', err)
+        return null
+      }
     },
   }
 }
