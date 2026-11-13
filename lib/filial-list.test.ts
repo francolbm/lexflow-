@@ -22,7 +22,7 @@ function makeDeps(over: Partial<ListDeps> = {}): ListDeps & Record<string, any> 
     countOpenDemands: vi.fn(async () => ({ fa: 0, fc: 1 })),
     countActiveLawyers: vi.fn(async () => ({ fa: 2, fc: 1 })),
     getSubscriptions: vi.fn(async () => [subAtiva('fa'), { ...subAtiva('fc'), cancel_at_period_end: true }]),
-    getFilialMonthlyCents: vi.fn(async () => MENSAL),
+    getPricing: vi.fn(async () => ({ fullCents: 99700, filialCents: MENSAL })),
     ...over,
   } as any
 }
@@ -59,18 +59,20 @@ describe('listarFiliais — permissão', () => {
     await listarFiliais(d, USER)
     expect(d.listFiliais).toHaveBeenCalledWith('m1')
     for (const fn of ['getEnderecos', 'countOpenDemands', 'countActiveLawyers', 'getSubscriptions']) {
-      expect(d[fn]).toHaveBeenCalledWith(['fa', 'fc'])
+      expect(d[fn]).toHaveBeenCalledWith(['m1', 'fa', 'fc'])
     }
   })
 })
 
 describe('listarFiliais — dados', () => {
-  it('matriz sem filiais: 200 com lista vazia e sem consultas extras', async () => {
+  it('matriz sem filiais: 200 com lista vazia, mas com os dados da matriz', async () => {
     const d = makeDeps({ listFiliais: vi.fn(async () => []) })
     const r = await listarFiliais(d, USER)
     expect(r.status).toBe(200)
     expect(items(r)).toEqual([])
-    expect(d.getEnderecos).not.toHaveBeenCalled()
+    expect(d.getEnderecos).toHaveBeenCalledWith(['m1'])
+    expect(r.body.matriz).toMatchObject({ id: 'm1', name: 'Matriz' })
+    expect(r.body.resumo).toMatchObject({ total: 0, ativas: 0, canceladas: 0 })
   })
 
   it('filial ativa: cobra, tem next_billing_date e cancels_at nulo', async () => {
@@ -94,7 +96,7 @@ describe('listarFiliais — dados', () => {
 
   it('resumo soma só quem vai renovar', async () => {
     const r = await listarFiliais(makeDeps(), USER)
-    expect(r.body.resumo).toEqual({ total: 2, ativas: 1, canceladas: 1, faturamento_mensal_estimado_centavos: MENSAL })
+    expect(r.body.resumo).toMatchObject({ total: 2, ativas: 1, canceladas: 1, faturamento_mensal_estimado_centavos: MENSAL })
   })
 
   it.each([['past_due', true], ['trialing', true], ['canceled', false], ['unpaid', false], ['incomplete', false]])(
@@ -118,7 +120,7 @@ describe('listarFiliais — dados', () => {
   })
 
   it('Stripe fora do ar: a lista continua, com faturamento nulo (não 0 falso)', async () => {
-    const d = makeDeps({ getFilialMonthlyCents: vi.fn(async () => null) })
+    const d = makeDeps({ getPricing: vi.fn(async () => null) })
     const r = await listarFiliais(d, USER)
     expect(r.status).toBe(200)
     const [a, c] = items(r)
@@ -136,9 +138,55 @@ describe('listarFiliais — dados', () => {
     const many = Array.from({ length: 25 }, (_, i) => ({ id: 'f' + i, name: 'F' + i, status: 'active', deleted_at: null, created_at: '2026-11-12T10:00:00Z' }))
     const d = makeDeps({ listFiliais: vi.fn(async () => many), getEnderecos: vi.fn(async () => []), getSubscriptions: vi.fn(async () => []) })
     await listarFiliais(d, USER)
-    for (const fn of ['listCandidateOrgs', 'listFiliais', 'getEnderecos', 'countOpenDemands', 'countActiveLawyers', 'getSubscriptions', 'getFilialMonthlyCents']) {
+    for (const fn of ['listCandidateOrgs', 'listFiliais', 'getEnderecos', 'countOpenDemands', 'countActiveLawyers', 'getSubscriptions', 'getPricing']) {
       expect(d[fn]).toHaveBeenCalledTimes(1)
     }
+  })
+})
+
+describe('listarFiliais — matriz e totais do Grupo', () => {
+  const withMatriz = (over: Partial<ListDeps> = {}) => makeDeps({
+    getEnderecos: vi.fn(async () => [
+      { organization_id: 'm1', cnpj: '11222333000181', cidade: 'Cuiabá', estado: 'MT' },
+      { organization_id: 'fa', cnpj: '98765432000198', cidade: 'São Paulo', estado: 'SP' },
+    ]),
+    countOpenDemands: vi.fn(async () => ({ m1: 4, fa: 0, fc: 1 })),
+    countActiveLawyers: vi.fn(async () => ({ m1: 3, fa: 2, fc: 1 })),
+    getSubscriptions: vi.fn(async () => [subAtiva('m1'), subAtiva('fa'), { ...subAtiva('fc'), cancel_at_period_end: true }]),
+    ...over,
+  })
+
+  it('bloco da matriz: dados, demandas, advogados e mensalidade cheia', async () => {
+    const r = await listarFiliais(withMatriz(), USER)
+    expect(r.body.matriz).toEqual({
+      id: 'm1', name: 'Matriz', cnpj: '11.222.333/0001-81', cidade: 'Cuiabá', estado: 'MT',
+      num_demandas_abertas: 4, num_advogados_ativos: 3, faturamento_mensal_estimado_centavos: 99700,
+    })
+  })
+
+  it('Grupo inclui a matriz: MRR = R$ 997 + filiais que renovam; advogados = matriz + filiais', async () => {
+    const r = await listarFiliais(withMatriz(), USER)
+    expect(r.body.resumo).toMatchObject({
+      faturamento_mensal_estimado_centavos: MENSAL, mrr_grupo_centavos: 99700 + MENSAL, advogados_grupo: 3 + 2 + 1,
+    })
+  })
+
+  it('matriz com cancelamento agendado não entra no MRR do Grupo', async () => {
+    const d = withMatriz({ getSubscriptions: vi.fn(async () => [{ ...subAtiva('m1'), cancel_at_period_end: true }, subAtiva('fa')]) })
+    const r = await listarFiliais(d, USER)
+    expect((r.body.matriz as any).faturamento_mensal_estimado_centavos).toBe(0)
+    expect((r.body.resumo as any).mrr_grupo_centavos).toBe(MENSAL)
+  })
+
+  it('Stripe fora do ar: MRR do Grupo vira null (não um 0 falso), advogados continuam', async () => {
+    const r = await listarFiliais(withMatriz({ getPricing: vi.fn(async () => null) }), USER)
+    expect(r.body.resumo).toMatchObject({ mrr_grupo_centavos: null, advogados_grupo: 6 })
+    expect((r.body.matriz as any).faturamento_mensal_estimado_centavos).toBeNull()
+  })
+
+  it('matriz sem endereço cadastrado: cnpj nulo (o front usa o nome na confirmação)', async () => {
+    const r = await listarFiliais(makeDeps({ getEnderecos: vi.fn(async () => []) }), USER)
+    expect(r.body.matriz).toMatchObject({ cnpj: null, cidade: null })
   })
 })
 

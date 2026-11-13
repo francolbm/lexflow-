@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AdvogadoShell } from '@/components/layout/AdvogadoShell'
 import { getAvatarUrl } from '@/lib/avatar'
+import { getGroupAccess } from '@/lib/filiais-access'
 
 export default async function AdvogadoLayout({
   children,
@@ -26,8 +27,10 @@ export default async function AdvogadoLayout({
     redirect('/admin')
   }
 
+  const access = await getGroupAccess(supabase, user.id)
+
   return (
-    <AdvogadoShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile?.avatar_url)}>
+    <AdvogadoShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile?.avatar_url)} showFiliais={access.eligible}>
       {children}
     </AdvogadoShell>
   )

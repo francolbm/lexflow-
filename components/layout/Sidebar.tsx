@@ -2,13 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Scale, LayoutDashboard, FileText, PlusCircle, CreditCard, UserRound, LogOut, X } from 'lucide-react'
+import { Scale, LayoutDashboard, FileText, PlusCircle, CreditCard, UserRound, LogOut, X, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Profile } from '@/lib/types'
 import { initialsOf } from '@/lib/avatar'
 import { useUserAvatar } from './UserAvatarContext'
+import { useNavFlags } from './NavFlagsContext'
 
 interface SidebarProps {
   profile: Profile | null
@@ -32,6 +33,11 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
   }
 
   const avatarUrl = useUserAvatar()
+  const { showFiliais } = useNavFlags()
+  // "Filiais" só para o titular de uma matriz Premium com assinatura ativa (flag vinda do layout)
+  const items = showFiliais
+    ? [...navItems.slice(0, 3), { href: '/filiais', label: 'Filiais', icon: Building2 }, ...navItems.slice(3)]
+    : navItems
   const initials = initialsOf(profile?.full_name)
 
   return (
@@ -51,7 +57,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (

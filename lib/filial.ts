@@ -2,33 +2,11 @@
 // entra por `FilialDeps`, o que permite testar ordem de validação e rollback sem rede.
 import { z } from 'zod'
 import { PLANS, normalizeSubscriptionStatus } from './types'
+import { UFS, onlyDigits, isValidCnpj } from './br-format'
+
+export { onlyDigits, isValidCnpj }
 
 export const FILIAL_COUPON_ID = 'FILIAL_PENNAJUS_40'
-
-const UFS = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE',
-  'PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
-] as const
-
-export function onlyDigits(v: string): string {
-  return v.replace(/\D/g, '')
-}
-
-export function isValidCnpj(raw: string): boolean {
-  const d = onlyDigits(raw)
-  if (d.length !== 14 || /^(\d)\1+$/.test(d)) return false
-  const calc = (len: number) => {
-    let sum = 0
-    let pos = len - 7
-    for (let i = 0; i < len; i++) {
-      sum += Number(d[i]) * pos--
-      if (pos < 2) pos = 9
-    }
-    const r = sum % 11
-    return r < 2 ? 0 : 11 - r
-  }
-  return calc(12) === Number(d[12]) && calc(13) === Number(d[13])
-}
 
 const req = (label: string) => z.string({ required_error: `${label} é obrigatório.` }).trim().min(1, `${label} é obrigatório.`)
 

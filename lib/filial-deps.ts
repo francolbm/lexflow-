@@ -4,6 +4,7 @@ import { getStripe, getStripePriceId } from '@/lib/stripe'
 import { FILIAL_COUPON_ID, FilialHttpError, type FilialDeps } from '@/lib/filial'
 import { DEMANDAS_ENCERRADAS, type CancelDeps } from '@/lib/filial-cancel'
 import type { ListDeps } from '@/lib/filial-list'
+import type { PreviaDeps } from '@/lib/filial-previa'
 
 export function createFilialDeps(redirectBase: string): FilialDeps {
   const db = createServiceClient()
@@ -299,22 +300,69 @@ export function createListDeps(): ListDeps {
         .in('organization_id', ids), 'getSubscriptions') ?? []
     },
 
-    async getFilialMonthlyCents() {
-      try {
-        const stripe = getStripe()
-        const [price, coupon] = await Promise.all([
-          stripe.prices.retrieve(getStripePriceId('premium')),
-          stripe.coupons.retrieve(FILIAL_COUPON_ID),
-        ])
-        const base = price.unit_amount
-        if (base == null) return null
-        if (coupon.percent_off != null) return Math.round(base * (100 - coupon.percent_off) / 100)
-        if (coupon.amount_off != null) return Math.max(0, base - coupon.amount_off)
-        return base
-      } catch (err) {
-        console.error('filial listar: preço no Stripe indisponível:', err)
-        return null
+    getPricing: () => fetchFilialPricing(),
+  }
+}
+
+// Preço Premium e preço da filial (com o cupom) em centavos; null se o Stripe não respondeu.
+async function fetchFilialPricing(): Promise<{ fullCents: number; filialCents: number } | null> {
+  try {
+    const stripe = getStripe()
+    const [price, coupon] = await Promise.all([
+      stripe.prices.retrieve(getStripePriceId('premium')),
+      stripe.coupons.retrieve(FILIAL_COUPON_ID),
+    ])
+    const base = price.unit_amount
+    if (base == null) return null
+    let filial = base
+    if (coupon.percent_off != null) filial = Math.round(base * (100 - coupon.percent_off) / 100)
+    else if (coupon.amount_off != null) filial = Math.max(0, base - coupon.amount_off)
+    return { fullCents: base, filialCents: filial }
+  } catch (err) {
+    console.error('filial: preço no Stripe indisponível:', err)
+    return null
+  }
+}
+
+// ---- Prévia de cobrança do wizard (Rota GET /api/escritorio/filial/previa) ----
+export function createPreviaDeps(): PreviaDeps {
+  const db = createServiceClient()
+  return {
+    async getOwnedMatriz(userId) {
+      const { data, error } = await db.from('organizations')
+        .select('id, name, subscriptions(plan_code, status, stripe_subscription_id)')
+        .eq('owner_user_id', userId).is('parent_organization_id', null)
+      if (error) throw new Error(`getOwnedMatriz: ${error.message}`)
+      // Dono de mais de uma? Prefere a que está habilitada (Premium ativa); a regra final é de montarPrevia.
+      const rows = (data ?? []).map((o) => {
+        const sub = Array.isArray(o.subscriptions) ? o.subscriptions[0] : o.subscriptions
+        return { id: o.id, name: o.name, plan_code: sub?.plan_code ?? null, status: sub?.status ?? null, stripe_subscription_id: sub?.stripe_subscription_id ?? null }
+      })
+      return rows.find((r) => r.plan_code === 'premium' && r.status === 'active' && r.stripe_subscription_id) ?? rows[0] ?? null
+    },
+
+    async getMatrizCnpj(orgId) {
+      const { data, error } = await db.from('endereco').select('cnpj').eq('organization_id', orgId).maybeSingle()
+      if (error) throw new Error(`getMatrizCnpj: ${error.message}`)
+      return data?.cnpj ?? null
+    },
+
+    getPricing: () => fetchFilialPricing(),
+
+    async getCard(matrizSubscriptionId) {
+      const stripe = getStripe()
+      // Mesma regra de createStripeSubscription: cartão da assinatura da matriz, senão o padrão do cliente.
+      const sub = await stripe.subscriptions.retrieve(matrizSubscriptionId, { expand: ['default_payment_method', 'customer'] })
+      const pm = (sub.default_payment_method && typeof sub.default_payment_method !== 'string')
+        ? sub.default_payment_method
+        : null
+      let card = pm?.card ?? null
+      if (!card) {
+        const cus = sub.customer as import('stripe').Stripe.Customer
+        const defId = typeof cus?.invoice_settings?.default_payment_method === 'string' ? cus.invoice_settings.default_payment_method : null
+        if (defId) card = (await stripe.paymentMethods.retrieve(defId)).card ?? null
       }
+      return card ? { marca: card.brand, final4: card.last4 } : null
     },
   }
 }

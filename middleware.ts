@@ -46,6 +46,7 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/demandas') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/assinatura') ||
+    pathname.startsWith('/filiais') ||
     pathname.startsWith('/perfil')
   )) {
     return NextResponse.redirect(new URL('/login', request.url))
