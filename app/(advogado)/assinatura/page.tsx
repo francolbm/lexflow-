@@ -9,6 +9,9 @@ import { PLANS, PLAN_CODES, isPlanCode, formatPlanPrice, SUBSCRIPTION_STATUS_LAB
 import { BillingButton } from '@/components/assinatura/BillingButton'
 import { PlanFeatureList } from '@/components/planos/PlanFeatureList'
 import { getDemandUsage, fmtResetDate } from '@/lib/quota'
+import { decideAssinaturaView, cancelNote } from '@/lib/matriz-contact'
+import { getMatrizContact } from '@/lib/matriz-contact-db'
+import { MatrizManagedCard, MembroFilialCard } from '@/components/assinatura/FilialSubscriptionCards'
 
 const SUPPORT_MAILTO = 'mailto:suporte@pennajus.com'
 
@@ -41,8 +44,28 @@ export default async function AssinaturaPage({ searchParams }: { searchParams: {
         .single()
     : { data: null }
   const { data: org } = membership
-    ? await supabase.from('organizations').select('owner_user_id').eq('id', membership.organization_id).single()
+    ? await supabase.from('organizations').select('owner_user_id, parent_organization_id, status').eq('id', membership.organization_id).single()
     : { data: null }
+
+  // Filial: a assinatura é paga e gerenciada pela matriz (mesmo cliente Stripe). Quem vê o quê: lib/matriz-contact.ts
+  const view = decideAssinaturaView(org, user.id)
+  if (view === 'filial_membro') {
+    return (
+      <>
+        <Header title="Assinatura" profile={profile} />
+        <MembroFilialCard />
+      </>
+    )
+  }
+  if (view === 'filial_titular' && membership) {
+    const contact = await getMatrizContact(membership.organization_id)
+    return (
+      <>
+        <Header title="Assinatura" profile={profile} />
+        <MatrizManagedCard contact={contact} cancelNote={cancelNote(org?.status, subscription?.current_period_end)} />
+      </>
+    )
+  }
 
   const planCode: unknown = subscription?.plan_code
   const currentPlan = isPlanCode(planCode) ? PLANS[planCode] : null
