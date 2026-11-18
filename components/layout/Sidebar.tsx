@@ -34,7 +34,7 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
 
   const avatarUrl = useUserAvatar()
   const { showFiliais, showMinhaFilial } = useNavFlags()
-  // "Filiais" só para o titular de uma matriz Premium com assinatura ativa; "Minha Filial" para todo membro
+  // "Filiais" só para o titular de uma matriz Premium (pagante ou cortesia); "Minha Filial" para todo membro
   // ativo de uma filial (flags vindas do layout). Nunca aparecem juntos.
   const items = [...navItems]
   if (showFiliais) items.splice(3, 0, { href: '/filiais', label: 'Filiais', icon: Building2 })

@@ -1,4 +1,5 @@
-// Quem pode ver /filiais: TITULAR de uma matriz Premium (não é filial) com assinatura ativa no Stripe.
+// Quem pode ver /filiais: TITULAR de uma matriz Premium (não é filial) com assinatura ativa no Stripe
+// (modo pagante) OU em cortesia pura, sem assinatura no Stripe (modo educativo: vê, mas não cria filiais).
 // A decisão é uma função pura (testável); getGroupAccess só busca os dados com o login do próprio usuário
 // (as policies de RLS já deixam o titular ler o seu escritório e a sua assinatura).
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -12,15 +13,16 @@ export interface OwnedOrgRow {
 }
 interface SubInfo { plan_code: string | null; status: string | null; stripe_subscription_id: string | null }
 
-export type GroupAccess = { eligible: true; orgId: string; orgName: string } | { eligible: false }
+export type GroupAccess = { eligible: true; orgId: string; orgName: string; cortesia: boolean } | { eligible: false }
 
 export function decideGroupAccess(orgs: OwnedOrgRow[] | null | undefined): GroupAccess {
   for (const o of orgs ?? []) {
     if (o.parent_organization_id !== null) continue // filial nunca é matriz
     const sub = Array.isArray(o.subscriptions) ? o.subscriptions[0] : o.subscriptions
-    if (sub?.plan_code === 'premium' && sub.status === 'active' && !!sub.stripe_subscription_id) {
-      return { eligible: true, orgId: o.id, orgName: o.name }
-    }
+    if (sub?.plan_code !== 'premium') continue
+    if (sub.status === 'active' && !!sub.stripe_subscription_id) return { eligible: true, orgId: o.id, orgName: o.name, cortesia: false }
+    // Cortesia pura: ativa e nunca ligada ao Stripe. Status Stripe não-ativos (past_due, canceled...) seguem sem acesso (backlog).
+    if (sub.status === 'active' && !sub.stripe_subscription_id) return { eligible: true, orgId: o.id, orgName: o.name, cortesia: true }
   }
   return { eligible: false }
 }

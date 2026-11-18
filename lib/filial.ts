@@ -107,7 +107,7 @@ export async function criarFilial(deps: FilialDeps, userId: string, rawBody: unk
 
   // 4) Assinatura Stripe ativa (cortesia/trial/inadimplente não servem: a filial cobra no mesmo customer)
   if (normalizeSubscriptionStatus(sub.status) !== 'active' || !sub.stripe_customer_id || !sub.stripe_subscription_id) {
-    return fail(403, 'A matriz precisa ter uma assinatura Premium ativa no Stripe para criar filiais.')
+    return fail(403, 'titular_sem_stripe_ativo', { message: 'Ative sua assinatura Premium pra criar filiais.' })
   }
   const customerId = sub.stripe_customer_id
 

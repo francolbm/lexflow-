@@ -95,6 +95,7 @@ describe('criarFilial — validações (ordem e falha rápida)', () => {
     })
     const r = await criarFilial(d, USER, body())
     expect(r.status).toBe(403)
+    expect(r.body).toMatchObject({ error: 'titular_sem_stripe_ativo', message: 'Ative sua assinatura Premium pra criar filiais.' })
     expect(d.cnpjExists).not.toHaveBeenCalled()
   })
 

@@ -19,14 +19,14 @@ export default async function FiliaisPage() {
   if (!user) redirect('/login')
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
 
-  // Só o titular de matriz Premium com assinatura ativa no Stripe (mesma regra do item do menu).
+  // Só o titular de matriz Premium (pagante ou cortesia pura; mesma regra do item do menu).
   const access = await getGroupAccess(supabase, user.id)
   if (!access.eligible) {
     return (
       <>
         <Header title={TITLE} profile={profile} />
         <InfoCard icon={Lock} title="Acesso restrito à área de Filiais">
-          Esta área é exclusiva do titular de um escritório matriz no plano Premium com assinatura ativa.
+          Esta área é exclusiva do titular de um escritório matriz no plano Premium.
         </InfoCard>
       </>
     )
@@ -45,7 +45,7 @@ export default async function FiliaisPage() {
     <>
       <Header title={TITLE} profile={profile} />
       {data
-        ? <FiliaisView data={data} />
+        ? <FiliaisView data={data} cortesia={access.cortesia} />
         : (
           <InfoCard icon={TriangleAlert} title="Não foi possível carregar as filiais">
             Tente novamente em instantes. Se o problema continuar, fale com o suporte PennaJus.

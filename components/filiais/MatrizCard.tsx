@@ -12,7 +12,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 // Destaque da matriz. Sem ações: os dados do escritório são editados em "Meu perfil".
-export function MatrizCard({ matriz }: { matriz: MatrizInfo }) {
+export function MatrizCard({ matriz, cortesia = false }: { matriz: MatrizInfo; cortesia?: boolean }) {
   const place = [matriz.cidade, matriz.estado].filter(Boolean).join('/')
   return (
     <section
@@ -24,7 +24,7 @@ export function MatrizCard({ matriz }: { matriz: MatrizInfo }) {
         <span className="inline-flex items-center gap-1 rounded-full bg-[#d4af37] px-2.5 py-0.5 text-xs font-bold text-[#0a192f]">
           <Crown className="h-3 w-3" aria-hidden />Matriz
         </span>
-        <span className="text-xs text-gray-400">Plano Premium</span>
+        <span className="text-xs text-gray-400">Plano Premium{cortesia ? ' (cortesia)' : ''}</span>
       </div>
       <h2 className="mt-2 truncate text-lg font-bold text-white sm:text-xl" title={matriz.name}>{matriz.name}</h2>
       <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-400">
@@ -36,7 +36,7 @@ export function MatrizCard({ matriz }: { matriz: MatrizInfo }) {
         <Stat label="Advogados" value={String(matriz.num_advogados_ativos)} />
         <Stat
           label="Mensalidade"
-          value={matriz.faturamento_mensal_estimado_centavos === null ? '—' : formatBRL(matriz.faturamento_mensal_estimado_centavos)}
+          value={cortesia ? 'Cortesia' : matriz.faturamento_mensal_estimado_centavos === null ? '—' : formatBRL(matriz.faturamento_mensal_estimado_centavos)}
         />
       </dl>
     </section>

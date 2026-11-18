@@ -8,7 +8,7 @@ const org = (over: Partial<OwnedOrgRow> = {}): OwnedOrgRow => ({
 
 describe('decideGroupAccess', () => {
   it('titular de matriz Premium com assinatura ativa no Stripe: acesso', () => {
-    expect(decideGroupAccess([org()])).toEqual({ eligible: true, orgId: 'm1', orgName: 'Matriz' })
+    expect(decideGroupAccess([org()])).toEqual({ eligible: true, orgId: 'm1', orgName: 'Matriz', cortesia: false })
   })
 
   it('aceita a assinatura como array (1:1 pode vir de qualquer forma do PostgREST)', () => {
@@ -18,12 +18,23 @@ describe('decideGroupAccess', () => {
   it.each([
     ['Pro', { plan_code: 'pro' }],
     ['Start', { plan_code: 'start' }],
-    ['cortesia (sem Stripe)', { stripe_subscription_id: null }],
     ['em teste (trialing)', { status: 'trialing' }],
     ['inadimplente', { status: 'past_due' }],
     ['cancelada', { status: 'canceled' }],
+    ['cancelada sem vínculo Stripe', { status: 'canceled', stripe_subscription_id: null }],
+    ['past_due sem vínculo Stripe', { status: 'past_due', stripe_subscription_id: null }],
   ])('plano/assinatura %s: sem acesso', (_n, over) => {
     expect(decideGroupAccess([org({ subscriptions: sub(over) })]).eligible).toBe(false)
+  })
+
+  it('cortesia Premium pura (ativa, sem Stripe): acesso em modo cortesia', () => {
+    expect(decideGroupAccess([org({ subscriptions: sub({ stripe_subscription_id: null }) })]))
+      .toEqual({ eligible: true, orgId: 'm1', orgName: 'Matriz', cortesia: true })
+  })
+
+  it('cortesia Pro/Start: sem acesso', () => {
+    expect(decideGroupAccess([org({ subscriptions: sub({ plan_code: 'pro', stripe_subscription_id: null }) })]).eligible).toBe(false)
+    expect(decideGroupAccess([org({ subscriptions: sub({ plan_code: 'start', stripe_subscription_id: null }) })]).eligible).toBe(false)
   })
 
   it('titular de FILIAL Premium: sem acesso (filial nunca é matriz)', () => {
@@ -39,6 +50,6 @@ describe('decideGroupAccess', () => {
 
   it('dono de uma filial e de uma matriz: acesso pela matriz', () => {
     const r = decideGroupAccess([org({ id: 'f', parent_organization_id: 'm1' }), org()])
-    expect(r).toEqual({ eligible: true, orgId: 'm1', orgName: 'Matriz' })
+    expect(r).toEqual({ eligible: true, orgId: 'm1', orgName: 'Matriz', cortesia: false })
   })
 })
