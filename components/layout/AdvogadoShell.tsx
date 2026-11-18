@@ -5,12 +5,12 @@ import type { Profile } from '@/lib/types'
 
 // Moldura da área do cliente (advogado): sidebar fixa no desktop; no mobile cada
 // página renderiza o <Header>, que abre a mesma sidebar como gaveta.
-export function AdvogadoShell({ profile, avatarUrl, showFiliais = false, children }: {
-  profile: Profile | null; avatarUrl: string | null; showFiliais?: boolean; children: React.ReactNode
+export function AdvogadoShell({ profile, avatarUrl, showFiliais = false, showMinhaFilial = false, children }: {
+  profile: Profile | null; avatarUrl: string | null; showFiliais?: boolean; showMinhaFilial?: boolean; children: React.ReactNode
 }) {
   return (
     <UserAvatarProvider url={avatarUrl}>
-      <NavFlagsProvider showFiliais={showFiliais}>
+      <NavFlagsProvider showFiliais={showFiliais} showMinhaFilial={showMinhaFilial}>
       <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#0a192f' }}>
         {/* Desktop sidebar */}
         <div className="hidden lg:flex lg:flex-shrink-0 lg:w-64">

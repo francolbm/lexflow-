@@ -33,11 +33,12 @@ export function Sidebar({ profile, onClose }: SidebarProps) {
   }
 
   const avatarUrl = useUserAvatar()
-  const { showFiliais } = useNavFlags()
-  // "Filiais" só para o titular de uma matriz Premium com assinatura ativa (flag vinda do layout)
-  const items = showFiliais
-    ? [...navItems.slice(0, 3), { href: '/filiais', label: 'Filiais', icon: Building2 }, ...navItems.slice(3)]
-    : navItems
+  const { showFiliais, showMinhaFilial } = useNavFlags()
+  // "Filiais" só para o titular de uma matriz Premium com assinatura ativa; "Minha Filial" para todo membro
+  // ativo de uma filial (flags vindas do layout). Nunca aparecem juntos.
+  const items = [...navItems]
+  if (showFiliais) items.splice(3, 0, { href: '/filiais', label: 'Filiais', icon: Building2 })
+  if (showMinhaFilial) items.splice(items.findIndex((i) => i.href === '/perfil'), 0, { href: '/minha-filial', label: 'Minha Filial', icon: Building2 })
   const initials = initialsOf(profile?.full_name)
 
   return (

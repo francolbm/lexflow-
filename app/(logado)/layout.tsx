@@ -5,6 +5,7 @@ import { AdminShell } from '@/components/layout/AdminShell'
 import { getAvatarUrl } from '@/lib/avatar'
 import { isPlatformStaff } from '@/lib/types'
 import { getGroupAccess } from '@/lib/filiais-access'
+import { getFilialOrgId } from '@/lib/minha-filial-access'
 
 // Páginas de qualquer usuário logado (ex.: /perfil): a moldura segue o papel na
 // plataforma — equipe PennaJus vê o painel admin, clientes veem a área do advogado.
@@ -18,6 +19,6 @@ export default async function LogadoLayout({ children }: { children: React.React
   if (isPlatformStaff(profile?.role)) {
     return <AdminShell profile={profile} avatarUrl={avatarUrl}>{children}</AdminShell>
   }
-  const access = await getGroupAccess(supabase, user.id)
-  return <AdvogadoShell profile={profile} avatarUrl={avatarUrl} showFiliais={access.eligible}>{children}</AdvogadoShell>
+  const [access, filialOrgId] = await Promise.all([getGroupAccess(supabase, user.id), getFilialOrgId(supabase, user.id)])
+  return <AdvogadoShell profile={profile} avatarUrl={avatarUrl} showFiliais={access.eligible} showMinhaFilial={!!filialOrgId}>{children}</AdvogadoShell>
 }

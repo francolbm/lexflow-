@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { AdvogadoShell } from '@/components/layout/AdvogadoShell'
 import { getAvatarUrl } from '@/lib/avatar'
 import { getGroupAccess } from '@/lib/filiais-access'
+import { getFilialOrgId } from '@/lib/minha-filial-access'
 
 export default async function AdvogadoLayout({
   children,
@@ -27,10 +28,10 @@ export default async function AdvogadoLayout({
     redirect('/admin')
   }
 
-  const access = await getGroupAccess(supabase, user.id)
+  const [access, filialOrgId] = await Promise.all([getGroupAccess(supabase, user.id), getFilialOrgId(supabase, user.id)])
 
   return (
-    <AdvogadoShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile?.avatar_url)} showFiliais={access.eligible}>
+    <AdvogadoShell profile={profile} avatarUrl={await getAvatarUrl(supabase, profile?.avatar_url)} showFiliais={access.eligible} showMinhaFilial={!!filialOrgId}>
       {children}
     </AdvogadoShell>
   )
