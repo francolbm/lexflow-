@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 
 // Orçamento total de caracteres extraídos dos anexos para não estourar o
 // limite de tokens do prompt. ~40k chars ≈ 10k tokens, sobra espaço para a
-// resposta (max_tokens 4096) e o restante do briefing.
+// resposta (max_tokens 6000) e o restante do briefing.
 const TOTAL_CHAR_BUDGET = 40000
 // Limite por arquivo individual, para um único anexo gigante não engolir tudo.
 const PER_FILE_CHAR_LIMIT = 15000

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { generateWithClaude } from '@/lib/ai/claude'
+import { generateWithClaudeDetailed, TRUNCATION_NOTICE } from '@/lib/ai/claude'
+
+export const maxDuration = 300 // até 5 min: peças longas (6000 tokens) levam mais de 1 min
 
 const SYSTEM_PROMPT = `Você é um assistente jurídico especializado em revisar minutas para advogados brasileiros.
 Você receberá uma minuta existente e um pedido de ajuste feito pelo advogado responsável.
@@ -84,7 +86,8 @@ ${demand.adjustment_notes}
 
 Devolva o documento completo com o ajuste aplicado.`
 
-    const generatedText = await generateWithClaude(SYSTEM_PROMPT, userPrompt)
+    const ai = await generateWithClaudeDetailed(SYSTEM_PROMPT, userPrompt)
+    const generatedText = ai.truncated ? ai.text + TRUNCATION_NOTICE : ai.text
 
     const versionNo = lastDelivery.version_no + 1
 
@@ -95,7 +98,9 @@ Devolva o documento completo com o ajuste aplicado.`
         organization_id: demand.organization_id,
         version_no: versionNo,
         delivered_by: user.id,
-        notes: 'Ajuste aplicado por IA — aguardando revisão do operador',
+        notes: ai.truncated
+          ? 'Ajuste aplicado por IA — ⚠ TEXTO TRUNCADO (limite de tokens), aguardando revisão do operador'
+          : 'Ajuste aplicado por IA — aguardando revisão do operador',
         visible_to_client: false,
         generated_by_ai: true,
       })
@@ -133,7 +138,7 @@ Devolva o documento completo com o ajuste aplicado.`
       entity: 'deliveries',
       entity_id: delivery.id,
       previous_data: { previous_version: lastDelivery.version_no },
-      new_data: { demand_id: demandId, version_no: versionNo, model: 'claude-sonnet-5' },
+      new_data: { demand_id: demandId, version_no: versionNo, model: 'claude-sonnet-5', was_truncated: ai.truncated },
     })
 
     return NextResponse.json({

@@ -42,11 +42,25 @@ function draftSimulado(userPrompt: string): string {
   ].join('\n')
 }
 
+export const MAX_OUTPUT_TOKENS = 6000
+
+export const TRUNCATION_NOTICE =
+  '\n\n[⚠️ TEXTO TRUNCADO - documento gerado excedeu limite de tokens. ' +
+  'Operador deve solicitar continuação ou refazer com briefing mais objetivo.]'
+
+export interface ClaudeResult { text: string; truncated: boolean }
+
+/** Mantida para quem só quer o texto (ex.: read-process, que faz parse de JSON e não pode receber o aviso). */
 export async function generateWithClaude(systemPrompt: string, userPrompt: string): Promise<string> {
+  return (await generateWithClaudeDetailed(systemPrompt, userPrompt)).text
+}
+
+/** Igual a generateWithClaude, mas informa se a IA parou por limite de tokens (stop_reason = max_tokens). */
+export async function generateWithClaudeDetailed(systemPrompt: string, userPrompt: string): Promise<ClaudeResult> {
   // Interruptor de teste: pula a IA real e devolve uma minuta de exemplo.
   if (process.env.AI_MOCK === '1') {
     await new Promise((resolve) => setTimeout(resolve, 600))
-    return draftSimulado(userPrompt)
+    return { text: draftSimulado(userPrompt), truncated: false }
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -63,7 +77,7 @@ export async function generateWithClaude(systemPrompt: string, userPrompt: strin
     },
     body: JSON.stringify({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: MAX_OUTPUT_TOKENS,
       system: systemPrompt,
       messages: [{ role: 'user', content: userPrompt }],
     }),
@@ -80,5 +94,7 @@ export async function generateWithClaude(systemPrompt: string, userPrompt: strin
     throw new Error('Resposta da IA sem conteúdo de texto')
   }
 
-  return textBlock.text as string
+  const truncated = data.stop_reason === 'max_tokens'
+  if (truncated) console.warn('[ai] resposta truncada por max_tokens (' + MAX_OUTPUT_TOKENS + ')')
+  return { text: textBlock.text as string, truncated }
 }
